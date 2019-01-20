@@ -1,6 +1,6 @@
 #include "Game.hpp"
 
-Game::Game() : turn('b'), won(0)
+Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -82,9 +82,69 @@ char Game::checkWin()
 	return 0;
 }
 
-void Game::checkCapture()
+void Game::checkCapture(int x, int y)
 {
-	;
+	int c = 0;
+	char opp = (turn == 'b' ? 'w' : 'b');
+	if (x >= 3 && board[x - 1][y] == opp
+		&& board[x - 2][y] == opp && board[x - 3][y] == turn)
+	{
+		board[x - 1][y] = 0;
+		board[x - 2][y] = 0;
+		c++;
+	}
+	if (x <= 15 && board[x + 1][y] == opp
+		&& board[x + 2][y] == opp && board[x + 3][y] == turn)
+	{
+		board[x + 1][y] = 0;
+		board[x + 2][y] = 0;
+		c++;
+	}
+	if (y >= 3 && board[x][y - 1] == opp
+		&& board[x][y - 2] == opp && board[x][y - 3] == turn)
+	{
+		board[x][y - 1] = 0;
+		board[x][y - 2] = 0;
+		c++;
+	}
+	if (y <= 15 && board[x][y + 2] == opp
+		&& board[x][y + 2] == opp && board[x][y + 3] == turn)
+	{
+		board[x][y + 1] = 0;
+		board[x][y + 2] = 0;
+		c++;
+	}
+	if (x >= 3 && y >= 3 && board[x - 1][y - 1] == opp
+		&& board[x - 2][y - 2] == opp && board[x - 3][y - 3] == turn)
+	{
+		board[x - 1][y - 1] = 0;
+		board[x - 2][y - 2] = 0;
+		c++;
+	}
+	if (x >= 3 && y <= 15 && board[x - 1][y + 1] == opp
+		&& board[x - 2][y + 2] == opp && board[x - 3][y + 3] == turn)
+	{
+		board[x - 1][y + 1] = 0;
+		board[x - 2][y + 2] = 0;
+		c++;
+	}
+	if (x <= 15 && y >= 3 && board[x + 1][y - 1] == opp
+		&& board[x + 2][y - 2] == opp && board[x + 3][y - 3] == turn)
+	{
+		board[x + 1][y - 1] = 0;
+		board[x + 2][y - 2] = 0;
+		c++;
+	}
+	if (x <= 15 && y <= 15 && board[x + 1][y + 1] == opp
+		&& board[x + 2][y + 2] == opp && board[x + 3][y + 3] == turn)
+	{
+		board[x + 1][y + 1] = 0;
+		board[x + 2][y + 2] = 0;
+		c++;
+	}
+	(turn == 'b' ? cap_b : cap_w) += 2 * c;
+	if ((turn == 'b' ? cap_b : cap_w) >= 10)
+		won = turn;
 }
 
 int Game::move(int x, int y)
@@ -95,9 +155,11 @@ int Game::move(int x, int y)
 		return -1;
 	board[y][x] = turn;
 	cout << x << ", " << y << endl;
-	if ((won = checkWin()))
-		cout << "win\n";
-	checkCapture();
+	won = checkWin();
+	if (!won)
+		checkCapture(y, x);
+	if (won)
+		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');
 	return 1;
 }
