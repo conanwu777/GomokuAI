@@ -1,5 +1,10 @@
 #include "Game.hpp"
 
+bool Game::inBound(int x, int y)
+{
+	return (x >= 0 && y >= 0 && x < 19 && y < 19);
+}
+
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
 {
 	for (int i = 0; i < 19; i++)
@@ -82,69 +87,98 @@ char Game::checkWin()
 	return 0;
 }
 
+bool Game::capture(int x, int y, int dx, int dy, char opp)
+{
+	if (inBound(x + 3 * dx, y * 3 * dy)
+		&& board[y + dy][x + dx] == opp
+		&& board[y + 2 * dy][x + 2 * dx] == opp
+		&& board[y + 3 * dy][x + 3 * dx] == turn)
+	{
+		board[y + dy][x + dx] = 0;
+		board[y + 2 * dy][x + 2 * dx] = 0;
+		return true;
+	}
+	return false;
+}
+
 void Game::checkCapture(int x, int y)
 {
 	int c = 0;
 	char opp = (turn == 'b' ? 'w' : 'b');
-	if (x >= 3 && board[x - 1][y] == opp
-		&& board[x - 2][y] == opp && board[x - 3][y] == turn)
-	{
-		board[x - 1][y] = 0;
-		board[x - 2][y] = 0;
+	if (capture(x, y, 1, 0, opp))
 		c++;
-	}
-	if (x <= 15 && board[x + 1][y] == opp
-		&& board[x + 2][y] == opp && board[x + 3][y] == turn)
-	{
-		board[x + 1][y] = 0;
-		board[x + 2][y] = 0;
+	if (capture(x, y, 0, 1, opp))
 		c++;
-	}
-	if (y >= 3 && board[x][y - 1] == opp
-		&& board[x][y - 2] == opp && board[x][y - 3] == turn)
-	{
-		board[x][y - 1] = 0;
-		board[x][y - 2] = 0;
+	if (capture(x, y, -1, 0, opp))
 		c++;
-	}
-	if (y <= 15 && board[x][y + 2] == opp
-		&& board[x][y + 2] == opp && board[x][y + 3] == turn)
-	{
-		board[x][y + 1] = 0;
-		board[x][y + 2] = 0;
+	if (capture(x, y, 0, -1, opp))
 		c++;
-	}
-	if (x >= 3 && y >= 3 && board[x - 1][y - 1] == opp
-		&& board[x - 2][y - 2] == opp && board[x - 3][y - 3] == turn)
-	{
-		board[x - 1][y - 1] = 0;
-		board[x - 2][y - 2] = 0;
+	if (capture(x, y, 1, 1, opp))
 		c++;
-	}
-	if (x >= 3 && y <= 15 && board[x - 1][y + 1] == opp
-		&& board[x - 2][y + 2] == opp && board[x - 3][y + 3] == turn)
-	{
-		board[x - 1][y + 1] = 0;
-		board[x - 2][y + 2] = 0;
+	if (capture(x, y, 1, -1, opp))
 		c++;
-	}
-	if (x <= 15 && y >= 3 && board[x + 1][y - 1] == opp
-		&& board[x + 2][y - 2] == opp && board[x + 3][y - 3] == turn)
-	{
-		board[x + 1][y - 1] = 0;
-		board[x + 2][y - 2] = 0;
+	if (capture(x, y, -1, 1, opp))
 		c++;
-	}
-	if (x <= 15 && y <= 15 && board[x + 1][y + 1] == opp
-		&& board[x + 2][y + 2] == opp && board[x + 3][y + 3] == turn)
-	{
-		board[x + 1][y + 1] = 0;
-		board[x + 2][y + 2] = 0;
+	if (capture(x, y, -1, -1, opp))
 		c++;
-	}
 	(turn == 'b' ? cap_b : cap_w) += 2 * c;
 	if ((turn == 'b' ? cap_b : cap_w) >= 10)
 		won = turn;
+}
+
+bool Game::checkThree(int x, int y, int dx, int dy)
+{
+	int stx = x;
+	int sty = y;
+	for (int i = 0; i <= 4 && inBound(stx, sty); i++)
+	{
+		stx -= dx;
+		sty -= dy;
+	}
+	for (int i = 0; i <= 8 && inBound(stx, sty); i++)
+	{
+		if (!board[sty][stx])
+		{
+			int pieces = 0;
+			bool gap = false;
+			for (int j = 1; j <= 4 && inBound(stx + j * dx, sty + j * dy); j++)
+			{
+				if (board[sty + j * dy][stx + j * dx] == turn)
+					pieces++;
+				else if (!board[sty + j * dy][stx + j * dx])
+				{
+					if (pieces == 3)
+						return true;
+					if (gap)
+						break ;
+					gap = true;
+				}
+				else
+					break ;
+			}
+			stx += dx;
+			sty += dy;
+		}
+	}
+	return false;
+}
+
+bool Game::doubleThree(int x, int y)
+{
+	int c = 0;
+
+	if (checkThree(x, y, 1, 0))
+		c++;
+	if (checkThree(x, y, 0, 1))
+		c++;
+	if (checkThree(x, y, 1, 1))
+		c++;
+	if (checkThree(x, y, 1, -1))
+		c++;
+	if (c >= 2)
+		return true;
+	return false;
+
 }
 
 int Game::move(int x, int y)
@@ -153,11 +187,13 @@ int Game::move(int x, int y)
 		return -1;
 	if (board[y][x])
 		return -1;
+	if (doubleThree(x, y))
+		return -1;
 	board[y][x] = turn;
 	cout << x << ", " << y << endl;
 	won = checkWin();
 	if (!won)
-		checkCapture(y, x);
+		checkCapture(x, y);
 	if (won)
 		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');

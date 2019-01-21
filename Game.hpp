@@ -13,7 +13,11 @@ public:
     ~Game();
     int move(int x, int y);
     char checkWin();
+    bool capture(int x, int y, int dx, int dy, char opp);
 	void checkCapture(int x, int y);
+    bool inBound(int x, int y);
+    bool checkThree(int x, int y, int dx, int dy);
+    bool doubleThree(int x, int y);
 };
 
 #endif
