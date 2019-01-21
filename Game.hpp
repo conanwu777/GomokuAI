@@ -1,6 +1,7 @@
 #ifndef GAME_HPP
 # define GAME_HPP
 # include "gomoku.hpp"
+# include <deque>
 
 class Game {
 public:
@@ -16,8 +17,9 @@ public:
     bool capture(int x, int y, int dx, int dy, char opp);
 	void checkCapture(int x, int y);
     bool inBound(int x, int y);
-    bool checkThree(int x, int y, int dx, int dy);
-    bool doubleThree(int x, int y);
+    void checkValid(int, int);
+    int checkThree(int x, int y, int xOff, int yOff);   
+    bool checkLineThrees(deque<char> &line, char target);
 };
 
 #endif

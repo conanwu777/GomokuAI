@@ -126,59 +126,70 @@ void Game::checkCapture(int x, int y)
 		won = turn;
 }
 
-bool Game::checkThree(int x, int y, int dx, int dy)
-{
-	int stx = x;
-	int sty = y;
-	for (int i = 0; i <= 4 && inBound(stx, sty); i++)
-	{
-		stx -= dx;
-		sty -= dy;
-	}
-	for (int i = 0; i <= 8 && inBound(stx, sty); i++)
-	{
-		if (!board[sty][stx])
-		{
-			int pieces = 0;
-			bool gap = false;
-			for (int j = 1; j <= 4 && inBound(stx + j * dx, sty + j * dy); j++)
-			{
-				if (board[sty + j * dy][stx + j * dx] == turn)
-					pieces++;
-				else if (!board[sty + j * dy][stx + j * dx])
-				{
-					if (pieces == 3)
-						return true;
-					if (gap)
-						break ;
-					gap = true;
-				}
-				else
-					break ;
+bool Game::checkLineThrees(deque<char> &line, char target){
+	bool leftOpen = false;
+	int count = 0;
+	bool hole = false;
+	int num = 0;
+	for (auto i = line.begin(); i != line.end() ; i++){
+		if (*i == 0){
+			if (!leftOpen){
+				leftOpen = true;
 			}
-			stx += dx;
-			sty += dy;
+			else if (count == 3){
+				return true;
+			}
+			else if (hole == false){
+				hole = true;
+			}
+			else{
+				return 0;
+			}
+		}
+		else if (*i == target){
+			if (leftOpen){
+				count++;
+			}
+		}
+		else{
+			if (leftOpen)
+				return 0;
 		}
 	}
-	return false;
+	return 0;
 }
 
-bool Game::doubleThree(int x, int y)
+int Game::checkThree(int x, int y, int xOff, int yOff){
+	bool emptyLeft = false;
+	bool emptyRight = false;
+	
+	deque<char> cur;
+
+	for (int i = -4; i < 5; i++){
+		if (cur.size() >= 6)
+			cur.pop_front();
+		if (x + i * xOff >= 0 && x + i * xOff < 19 && y + i * yOff >= 0 && y + i * yOff < 19){
+			cur.push_back(board[y + i * yOff][x + i * xOff]);
+		}
+
+		if (checkLineThrees(cur, turn))
+			return 1;
+	}
+	return 0;
+}
+
+
+
+void Game::checkValid(int x, int y)
 {
-	int c = 0;
-
-	if (checkThree(x, y, 1, 0))
-		c++;
-	if (checkThree(x, y, 0, 1))
-		c++;
-	if (checkThree(x, y, 1, 1))
-		c++;
-	if (checkThree(x, y, 1, -1))
-		c++;
-	if (c >= 2)
-		return true;
-	return false;
-
+	int count = 0;
+	count += checkThree(x, y, 1, 0);
+	count += checkThree(x, y, 0, 1);
+	count += checkThree(x, y, 1, 1);
+	count += checkThree(x, y, 1, -1);
+	if (count >= 2){
+		cout << "This is an invalid move but im not stopping it currently...\n";
+	}
 }
 
 int Game::move(int x, int y)
@@ -187,13 +198,13 @@ int Game::move(int x, int y)
 		return -1;
 	if (board[y][x])
 		return -1;
-	if (doubleThree(x, y))
-		return -1;
 	board[y][x] = turn;
 	cout << x << ", " << y << endl;
 	won = checkWin();
 	if (!won)
 		checkCapture(x, y);
+	//if !capture
+	checkValid(x, y);
 	if (won)
 		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');
