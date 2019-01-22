@@ -160,26 +160,25 @@ bool Game::checkLineThrees(deque<char> &line, char target){
 	return 0;
 }
 
-int Game::checkThree(int x, int y, int xOff, int yOff){
+int Game::checkThree(int x, int y, int xOff, int yOff)
+{
 	bool emptyLeft = false;
 	bool emptyRight = false;
 	
 	deque<char> cur;
 
-	for (int i = -4; i < 5; i++){
+	for (int i = -4; i < 5; i++)
+	{
 		if (cur.size() >= 6)
 			cur.pop_front();
-		if (x + i * xOff >= 0 && x + i * xOff < 19 && y + i * yOff >= 0 && y + i * yOff < 19){
+		if (x + i * xOff >= 0 && x + i * xOff < 19
+			&& y + i * yOff >= 0 && y + i * yOff < 19)
 			cur.push_back(board[y + i * yOff][x + i * xOff]);
-		}
-
 		if (checkLineThrees(cur, turn))
 			return 1;
 	}
 	return 0;
 }
-
-
 
 bool Game::checkValid(int x, int y)
 {
@@ -203,12 +202,12 @@ int Game::move(int x, int y)
 	if (board[y][x])
 		return -1;
 	board[y][x] = turn;
-	cout << x << ", " << y << endl;
 	won = checkWin();
 	if (!won)
 		capture = checkCapture(x, y);
 	if (!capture)
-		if (!checkValid(x, y)){
+		if (!checkValid(x, y))
+		{
 			board[y][x] = 0;
 			return -1;
 		}
@@ -216,4 +215,16 @@ int Game::move(int x, int y)
 		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');
 	return 1;
+}
+
+int Game::aiMove()
+{
+	int x = -1;
+	int y = -1;
+	while (!inBound(x, y) || board[x][y])
+	{
+		x = rand() % 19;
+		y = rand() % 19;
+	}
+	return move(x, y);
 }

@@ -1,29 +1,5 @@
 #include "Display.hpp"
 
-// void	Display::ponies()
-// {
-// 	SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
-// 	SDL_Rect rect;
-// 	rect.w = (W - 2 * M) * 2 / (N - 1) / 3;
-// 	rect.h = (W - 2 * M) * 2 / (N - 1) / 3;
-// 	rect.x = 50;
-// 	rect.y = 50;
-// 	SDL_RenderCopy(rend, p1, NULL, &rect);
-// }
-
-// void	Display::connect(Event const & e, Event const & p)
-// {
-// 	int y = (runTime - e.getData().timestamp) * GAP;
-// 	int x = M + e.getData().owner * (W - 2 * M) / (N - 1);
-// 	int y2 = (runTime - p.getData().timestamp) * GAP;
-// 	int x2 = M + p.getData().owner * (W - 2 * M) / (N - 1);
-// 	if (y < H || y2 < H){
-// 		SDL_RenderDrawLine(rend, x, y, x2, y2);
-// 		SDL_RenderDrawLine(rend, x, y - 1, x2, y2 - 1);
-// 		SDL_RenderDrawLine(rend, x - 1, y, x2 - 1, y2);
-// 	}
-// }
-
 void	Display::refresh()
 {
 	SDL_RenderCopy(rend, background, NULL, NULL);
@@ -85,9 +61,19 @@ Display::~Display(){
 
 int		Display::run()
 {
+	if (game.ai == 'b')
+	{
+		game.board[9][9] = 'b';
+		game.turn = 'w';
+	}
 	while (1)
 	{
 		get_input();
 		refresh();
+		if (game.ai == game.turn)
+		{
+			game.aiMove();
+			refresh();
+		}
 	}
 }

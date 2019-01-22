@@ -5,6 +5,7 @@
 
 class Game {
 public:
+    char ai;
     char turn;
     char won;
     int cap_b;
@@ -12,10 +13,11 @@ public:
     char board[19][19];
     Game();
     ~Game();
+    int aiMove();
     int move(int x, int y);
     char checkWin();
     bool capture(int x, int y, int dx, int dy, char opp);
-	bool checkCapture(int x, int y);
+    bool checkCapture(int x, int y);
     bool inBound(int x, int y);
     bool checkValid(int, int);
     int checkThree(int x, int y, int xOff, int yOff);   
