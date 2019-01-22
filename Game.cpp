@@ -12,6 +12,23 @@ Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
 			board[i][j] = 0;
 }
 
+Game& Game::operator=(const Game &g)
+{
+	ai = g.ai;
+    turn = g.turn;
+    won = g.won;
+    cap_b = g.cap_b;
+    cap_w = g.cap_w;
+	for (int x =0; x < 19; x++)
+		for (int y = 0; y < 19; y++)
+			board[y][x] = g.board[y][x];
+	return *this;
+}
+
+Game::Game(const Game &g){
+	*this = g;
+}
+
 Game::~Game() {}
 
 char Game::checkWin()
@@ -180,6 +197,36 @@ int Game::checkThree(int x, int y, int xOff, int yOff)
 	return 0;
 }
 
+int Game::calcScore(){
+	return 2;
+}
+
+int	Game::minimax(int depth, bool min, const Game& nextBoard, int lastX, int lastY, int *retX, int *retY)
+{
+	if (lastX != -1 && lastY != -1 && move(lastX, lastY) == -1)
+		return INT_MAX - 1;
+	if (depth == 0)
+		return calcScore();
+	int store = (min == true ? INT_MAX : INT_MIN);
+	int bestX = -1;
+	int bestY = -1;
+	for (int x = 0; x < 19; x++)
+		for (int y = 0; y < 19; y++)
+		{
+			Game g = nextBoard;
+			int tmp = minimax(depth - 1, !min, g, x, y, retX, retY);
+			if ((min && tmp < store) || (!min && tmp > store))
+			{
+				store = tmp;
+				bestX = x;
+				bestY = y;
+			}
+		}
+	*retX = bestX;
+	*retY = bestY;
+	return store;
+}
+
 bool Game::checkValid(int x, int y)
 {
 	int count = 0;
@@ -197,7 +244,7 @@ int Game::move(int x, int y)
 {
 	bool capture = true;
 
-	if (x < 0 || x > 18 || y < 0 || y > 18)
+	if (!inBound(x, y))
 		return -1;
 	if (board[y][x])
 		return -1;
@@ -219,12 +266,12 @@ int Game::move(int x, int y)
 
 int Game::aiMove()
 {
+	cout << "MOVE CALLED\n";
 	int x = -1;
 	int y = -1;
-	while (!inBound(x, y) || board[x][y])
-	{
-		x = rand() % 19;
-		y = rand() % 19;
-	}
-	return move(x, y);
+
+	minimax(1, false, *this, -1, -1, &x, &y);
+	move(x, y);
+	turn = (ai == 'b' ? 'w' : 'b');
+	return 1;
 }

@@ -12,6 +12,8 @@ public:
     int cap_w;
     char board[19][19];
     Game();
+    Game(const Game &g);
+    Game& operator=(const Game &g);
     ~Game();
     int aiMove();
     int move(int x, int y);
@@ -22,6 +24,8 @@ public:
     bool checkValid(int, int);
     int checkThree(int x, int y, int xOff, int yOff);   
     bool checkLineThrees(deque<char> &line, char target);
+    int calcScore();
+    int minimax(int depth, bool min, const Game& g, int lastX, int lastY, int *retX, int *retY);
 };
 
 #endif
