@@ -15,9 +15,9 @@ public:
     int move(int x, int y);
     char checkWin();
     bool capture(int x, int y, int dx, int dy, char opp);
-	void checkCapture(int x, int y);
+	bool checkCapture(int x, int y);
     bool inBound(int x, int y);
-    void checkValid(int, int);
+    bool checkValid(int, int);
     int checkThree(int x, int y, int xOff, int yOff);   
     bool checkLineThrees(deque<char> &line, char target);
 };

@@ -101,7 +101,7 @@ bool Game::capture(int x, int y, int dx, int dy, char opp)
 	return false;
 }
 
-void Game::checkCapture(int x, int y)
+bool Game::checkCapture(int x, int y)
 {
 	int c = 0;
 	char opp = (turn == 'b' ? 'w' : 'b');
@@ -124,6 +124,7 @@ void Game::checkCapture(int x, int y)
 	(turn == 'b' ? cap_b : cap_w) += 2 * c;
 	if ((turn == 'b' ? cap_b : cap_w) >= 10)
 		won = turn;
+	return c != 0;
 }
 
 bool Game::checkLineThrees(deque<char> &line, char target){
@@ -180,7 +181,7 @@ int Game::checkThree(int x, int y, int xOff, int yOff){
 
 
 
-void Game::checkValid(int x, int y)
+bool Game::checkValid(int x, int y)
 {
 	int count = 0;
 	count += checkThree(x, y, 1, 0);
@@ -188,12 +189,15 @@ void Game::checkValid(int x, int y)
 	count += checkThree(x, y, 1, 1);
 	count += checkThree(x, y, 1, -1);
 	if (count >= 2){
-		cout << "This is an invalid move but im not stopping it currently...\n";
+		return false;
 	}
+	return true;
 }
 
 int Game::move(int x, int y)
 {
+	bool capture = true;
+
 	if (x < 0 || x > 18 || y < 0 || y > 18)
 		return -1;
 	if (board[y][x])
@@ -202,9 +206,12 @@ int Game::move(int x, int y)
 	cout << x << ", " << y << endl;
 	won = checkWin();
 	if (!won)
-		checkCapture(x, y);
-	//if !capture
-	checkValid(x, y);
+		capture = checkCapture(x, y);
+	if (!capture)
+		if (!checkValid(x, y)){
+			board[y][x] = 0;
+			return -1;
+		}
 	if (won)
 		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');
