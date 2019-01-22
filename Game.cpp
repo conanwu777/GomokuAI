@@ -1,8 +1,29 @@
 #include "Game.hpp"
 
-bool Game::inBound(int x, int y)
+bool Game::inBound(int x, int y) const
 {
 	return (x >= 0 && y >= 0 && x < 19 && y < 19);
+}
+
+bool Game::adjacent(int x, int y) const
+{
+	if (inBound(x - 1, y) && board[y][x - 1])
+		return true;
+	if (inBound(x, y - 1) && board[y - 1][x])
+		return true;
+	if (inBound(x + 1, y) && board[y][x + 1])
+		return true;
+	if (inBound(x, y + 1) && board[y + 1][x])
+		return true;
+	if (inBound(x - 1, y - 1) && board[y - 1][x - 1])
+		return true;
+	if (inBound(x + 1, y + 1) && board[y + 1][x + 1])
+		return true;
+	if (inBound(x + 1, y - 1) && board[y - 1][x + 1])
+		return true;
+	if (inBound(x - 1, y + 1) && board[y + 1][x - 1])
+		return true;
+	return false;
 }
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
@@ -228,18 +249,18 @@ int Game::move(int x, int y)
 	return 1;
 }
 
-int eval(const Game &g)
+int eval(const Game &g, char c)
 {
 	if (g.won)
-		return (g.won == g.turn ? INT_MAX - 1 : INT_MIN + 1);
+		return (g.won == c ? INT_MAX : INT_MIN) / 2;
 	int ret = 0;
 	int diff = 0;
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
 		{
-			if (g.board[i][j] == g.turn)
+			if (g.board[i][j] == c)
 			{
-				ret += 18 - (abs(i - 9) + abs(j - 9));
+				ret -= abs(i - 9) + abs(j - 9);
 				diff++;
 			}
 			else if (g.board[i][j])
@@ -248,19 +269,21 @@ int eval(const Game &g)
 	return ret + diff * 100;
 }
 
-int minimax(const Game &g, int depth, int &x, int &y)
+int minimax(const Game &g, int depth, int &x, int &y, char c)
 {
 	if (depth >= MAX_DEPTH)
-		return eval(g);
+		return eval(g, c);
 	int ret = (depth % 2 ? INT_MAX : INT_MIN);
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
 		{
+			if (g.board[j][i] || !g.adjacent(i, j))
+				continue ;
 			Game t = g;
 			if (t.move(i, j) != -1)
 			{
 				int tx, ty;
-				int tmp = minimax(t, depth + 1, tx, ty);
+				int tmp = minimax(t, depth + 1, tx, ty, c);
 				if ((depth % 2 && tmp < ret) || (!(depth % 2) && tmp > ret))
 				{
 					ret = tmp;
@@ -276,6 +299,6 @@ int Game::aiMove()
 {
 	int x, y;
 
-	minimax(*this, 0, x, y);
+	minimax(*this, 0, x, y, turn);
 	return move(x, y);
 }

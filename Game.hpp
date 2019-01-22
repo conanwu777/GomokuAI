@@ -22,13 +22,14 @@ public:
 	char checkWin();
 	bool capture(int x, int y, int dx, int dy, char opp);
 	bool checkCapture(int x, int y);
-	bool inBound(int x, int y);
+	bool inBound(int x, int y) const;
+	bool adjacent(int x, int y) const;
 	bool checkValid(int, int);
 	int checkThree(int x, int y, int xOff, int yOff);   
 	bool checkLineThrees(deque<char> &line, char target);
 };
 
-int eval(const Game &);
-int minimax(const Game &g, int depth, int &x, int &y);
+int eval(const Game &, char turn);
+int minimax(const Game &g, int depth, int &x, int &y, char c);
 
 #endif
