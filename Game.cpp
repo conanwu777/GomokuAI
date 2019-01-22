@@ -40,7 +40,7 @@ Game& Game::operator=(const Game &g)
 	won = g.won;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
-	for (int x =0; x < 19; x++)
+	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
 	return *this;
@@ -198,7 +198,6 @@ int Game::checkThree(int x, int y, int xOff, int yOff)
 {
 	bool emptyLeft = false;
 	bool emptyRight = false;
-	
 	deque<char> cur;
 
 	for (int i = -4; i < 5; i++)
@@ -249,10 +248,10 @@ int Game::move(int x, int y)
 	return 1;
 }
 
-int eval(const Game &g, char c)
+int eval(const Game &g, char c, int depth)
 {
 	if (g.won)
-		return (g.won == c ? INT_MAX : INT_MIN) / 2;
+		return (g.won == c ? INT_MAX : INT_MIN) / (2 << depth);
 	int ret = 0;
 	int diff = 0;
 	for (int i = 0; i < 19; i++)
@@ -271,9 +270,9 @@ int eval(const Game &g, char c)
 
 int minimax(const Game &g, int depth, int &x, int &y, char c)
 {
-	if (depth >= MAX_DEPTH)
-		return eval(g, c);
-	int ret = (depth % 2 ? INT_MAX : INT_MIN);
+	if (depth >= MAX_DEPTH || g.won)
+		return eval(g, c, depth);
+	int ret = (g.turn != c ? INT_MAX : INT_MIN);
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
 		{
@@ -284,7 +283,7 @@ int minimax(const Game &g, int depth, int &x, int &y, char c)
 			{
 				int tx, ty;
 				int tmp = minimax(t, depth + 1, tx, ty, c);
-				if ((depth % 2 && tmp < ret) || (!(depth % 2) && tmp > ret))
+				if ((g.turn != c && tmp < ret) || (g.turn == c && tmp > ret))
 				{
 					ret = tmp;
 					x = i;

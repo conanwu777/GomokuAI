@@ -29,7 +29,7 @@ public:
 	bool checkLineThrees(deque<char> &line, char target);
 };
 
-int eval(const Game &, char turn);
+int eval(const Game &, char turn, int depth);
 int minimax(const Game &g, int depth, int &x, int &y, char c);
 
 #endif
