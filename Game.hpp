@@ -3,10 +3,12 @@
 # include "gomoku.hpp"
 # include <deque>
 
-# define MAX_DEPTH 3
+# define MAX_DEPTH 6
 
 class Game {
 public:
+	int alpha;
+    int beta;
 	char ai;
 	char turn;
 	char won;
@@ -30,6 +32,6 @@ public:
 };
 
 int eval(const Game &, char turn, int depth);
-int minimax(const Game &g, int depth, int &x, int &y, char c);
+int minimax(Game &g, int depth, int &x, int &y, char c);
 
 #endif

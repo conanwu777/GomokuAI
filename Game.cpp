@@ -26,7 +26,7 @@ bool Game::adjacent(int x, int y) const
 	return false;
 }
 
-Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
+Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0), alpha(INT_MIN), beta(INT_MAX)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -35,6 +35,8 @@ Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0)
 
 Game& Game::operator=(const Game &g)
 {
+	alpha = g.alpha;
+	beta = g.beta;
 	ai = g.ai;
 	turn = g.turn;
 	won = g.won;
@@ -268,7 +270,7 @@ int eval(const Game &g, char c, int depth)
 	return ret + diff * 100;
 }
 
-int minimax(const Game &g, int depth, int &x, int &y, char c)
+int minimax(Game &g, int depth, int &x, int &y, char c)
 {
 	if (depth >= MAX_DEPTH || g.won)
 		return eval(g, c, depth);
@@ -289,6 +291,21 @@ int minimax(const Game &g, int depth, int &x, int &y, char c)
 					x = i;
 					y = j;
 				}
+
+				if (g.turn == c){ //max
+					g.alpha = max(g.alpha, ret);
+					if (g.alpha >= g.beta){
+						cout << "max Alpha : " << g.alpha << " Beta : " << g.beta << " pruned at " << i << " , " << j << endl;
+						return ret;
+					}
+				}
+				else{ //min
+					g.beta = min(g.beta, ret);
+					if (g.alpha >= g.beta){
+						cout << "min Alpha : " << g.alpha << " Beta : " << g.beta << " pruned at " << i << " , " << j << endl;
+						return ret;
+					}
+				}
 			}
 		}
 	return ret;
@@ -298,6 +315,8 @@ int Game::aiMove()
 {
 	int x, y;
 
+	alpha = INT_MIN;
+	beta = INT_MAX;
 	minimax(*this, 0, x, y, turn);
 	return move(x, y);
 }
