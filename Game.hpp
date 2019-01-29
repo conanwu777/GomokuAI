@@ -3,7 +3,8 @@
 # include "gomoku.hpp"
 # include <deque>
 
-# define MAX_DEPTH 6
+
+# define MAX_DEPTH 4
 
 class Game {
 public:
@@ -14,6 +15,9 @@ public:
 	char won;
 	int cap_b;
 	int cap_w;
+	int score;
+	int lastX;
+	int lastY;
 	char board[19][19];
 	Game();
 	Game(const Game &g);

@@ -1,4 +1,7 @@
 #include "Game.hpp"
+#include "Selector.hpp"
+
+
 
 bool Game::inBound(int x, int y) const
 {
@@ -26,7 +29,7 @@ bool Game::adjacent(int x, int y) const
 	return false;
 }
 
-Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0), alpha(INT_MIN), beta(INT_MAX)
+Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0), alpha(INT_MIN), beta(INT_MAX), score(0), lastX(0), lastY(0)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -42,6 +45,9 @@ Game& Game::operator=(const Game &g)
 	won = g.won;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
+	score = g.score;
+	lastX = g.lastX;
+	lastY = g.lastY;
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
@@ -247,68 +253,9 @@ int Game::move(int x, int y)
 	if (won)
 		cout << won << " has won the game!\n";
 	turn = (turn == 'b' ? 'w' : 'b');
+	lastX = x;
+	lastY = y;
 	return 1;
-}
-
-int eval(const Game &g, char c, int depth)
-{
-	if (g.won)
-		return (g.won == c ? INT_MAX : INT_MIN) / (2 << depth);
-	int ret = 0;
-	int diff = 0;
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-		{
-			if (g.board[i][j] == c)
-			{
-				ret -= abs(i - 9) + abs(j - 9);
-				diff++;
-			}
-			else if (g.board[i][j])
-				diff--;
-		}
-	return ret + diff * 100;
-}
-
-int minimax(Game &g, int depth, int &x, int &y, char c)
-{
-	if (depth >= MAX_DEPTH || g.won)
-		return eval(g, c, depth);
-	int ret = (g.turn != c ? INT_MAX : INT_MIN);
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-		{
-			if (g.board[j][i] || !g.adjacent(i, j))
-				continue ;
-			Game t = g;
-			if (t.move(i, j) != -1)
-			{
-				int tx, ty;
-				int tmp = minimax(t, depth + 1, tx, ty, c);
-				if ((g.turn != c && tmp < ret) || (g.turn == c && tmp > ret))
-				{
-					ret = tmp;
-					x = i;
-					y = j;
-				}
-
-				if (g.turn == c){ //max
-					g.alpha = max(g.alpha, ret);
-					if (g.alpha >= g.beta){
-						cout << "max Alpha : " << g.alpha << " Beta : " << g.beta << " pruned at " << i << " , " << j << endl;
-						return ret;
-					}
-				}
-				else{ //min
-					g.beta = min(g.beta, ret);
-					if (g.alpha >= g.beta){
-						cout << "min Alpha : " << g.alpha << " Beta : " << g.beta << " pruned at " << i << " , " << j << endl;
-						return ret;
-					}
-				}
-			}
-		}
-	return ret;
 }
 
 int Game::aiMove()
@@ -317,6 +264,6 @@ int Game::aiMove()
 
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	minimax(*this, 0, x, y, turn);
+	Selector::minimax(*this, 0, x, y, turn);
 	return move(x, y);
 }
