@@ -1,7 +1,4 @@
 #include "Game.hpp"
-#include "Selector.hpp"
-
-
 
 bool Game::inBound(int x, int y) const
 {
@@ -29,7 +26,8 @@ bool Game::adjacent(int x, int y) const
 	return false;
 }
 
-Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0), alpha(INT_MIN), beta(INT_MAX), score(0), lastX(0), lastY(0)
+Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
+alpha(INT_MIN), beta(INT_MAX)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -45,9 +43,6 @@ Game& Game::operator=(const Game &g)
 	won = g.won;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
-	score = g.score;
-	lastX = g.lastX;
-	lastY = g.lastY;
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
@@ -61,81 +56,68 @@ Game::Game(const Game &g)
 
 Game::~Game() {}
 
-char Game::checkWin()
+char Game::checkLine(int stx, int sty, int incx, int incy)
 {
-	char ret = 0;
-	for (int i = 0; i < 19; i++)
+	bool open = false;
+	bool first = true;
+	int c = 0;
+	char cur;
+	while (inBound(stx, sty))
 	{
-		int c = 0;
-		int r = 0;
-		for (int j = 0; j < 19; j++)
+		if (board[sty][stx] && !first
+			&& board[sty - incy][stx - incx] == board[sty][stx])
+			c++;
+		else if (board[sty][stx])
 		{
-			if (board[i][j] && j > 0 && board[i][j] == board[i][j - 1])
-				c++;
-			else if (board[i][j])
-			{
-				c = 1;
-				ret = board[i][j];
-			}
-			else
-				c = 0;
-
-			if (board[j][i] && j > 0 && board[j][i] == board[j - 1][i])
-				r++;
-			else if (board[j][i])
-			{
-				r = 1;
-				ret = board[i][j];
-			}
-			else
-				r = 0;
-			if (r >= 5 || c >= 5)
-				return ret;
+			if (open && c == 4)
+				comp[(cur == 'b' ? 2 : 3)]++;
+			open = true;
+			if (first || board[sty - incy][stx - incx])
+				open = false;
+			c = 1;
+			cur = board[sty][stx];
 		}
-	}
-	for (int sum = 4; sum <= 32; sum++)
-	{
-		int c = 0;
-		for (int j = max(0, sum - 18); j <= min(18, sum); j++)
+		else
 		{
-			int i = sum - j;
-			if (board[i][j] && j > max(0, sum - 18)
-				&& board[i + 1][j - 1] == board[i][j])
-				c++;
-			else if (board[i][j])
-			{
-				c = 1;
-				ret = board[i][j];
-			}
-			else
-				c = 0;
-			if (c >= 5)
-				return ret;
+			if (open && c == 4)
+				comp[(cur == 'b' ? 0 : 1)]++;
+			if (open && c == 3)
+				comp[(cur == 'b' ? 4 : 5)]++;
+			open = true;
+			c = 0;
 		}
-	}
-	for (int diff = -14; diff <= 14; diff++)
-	{
-		int c = 0;
-		for (int j = max(0, diff); j <= min(18, 18 + diff); j++)
-		{
-			int i = j - diff;
-			if (board[i][j] && j > max(0, diff)
-				&& board[i - 1][j - 1] == board[i][j])
-				c++;
-			else if (board[i][j])
-			{
-				c = 1;
-				ret = board[i][j];
-			}
-			else
-				c = 0;
-			if (c >= 5)
-				return ret;
-		}
+		if (c >= 5)
+			return cur;
+		stx += incx;
+		sty += incy;
+		first = false;
 	}
 	return 0;
 }
 
+char Game::checkWin()
+{
+	char ret = 0;
+
+	bzero(&comp[0], sizeof(int) * 6);
+	for (int i = 0; i < 19; i++)
+	{
+		if ((ret = checkLine(0, i, 1, 0)))
+			return ret;
+		if ((ret = checkLine(i, 0, 0, 1)))
+			return ret;
+		if ((ret = checkLine(i, 0, 1, 1)))
+			return ret;
+		if (i > 0 && (ret = checkLine(0, i, 1, 1)))
+			return ret;
+		if ((ret = checkLine(i, 0, -1, 1)))
+			return ret;
+		if (i > 0 && (ret = checkLine(i, 18, 1, -1)))
+			return ret;
+
+	}
+	return 0;
+}
 bool Game::capture(int x, int y, int dx, int dy, char opp)
 {
 	if (inBound(x + 3 * dx, y + 3 * dy)
@@ -250,12 +232,74 @@ int Game::move(int x, int y)
 			board[y][x] = 0;
 			return -1;
 		}
-	if (won)
-		cout << won << " has won the game!\n";
+	
 	turn = (turn == 'b' ? 'w' : 'b');
-	lastX = x;
-	lastY = y;
 	return 1;
+}
+
+int eval(const Game &g, int depth)
+{
+	if (g.won)
+		return (g.won == 'b' ? INT_MAX : INT_MIN) / (2 << depth);
+	int ret = 0;
+	for (int i = 0; i < 19; i++)
+		for (int j = 0; j < 19; j++)
+		{
+			if (g.board[i][j] == 'b')
+				ret -= abs(i - 9) + abs(j - 9);
+			else if (g.board[i][j])
+				ret += abs(i - 9) + abs(j - 9);
+		}
+	ret += 1000000 * g.comp[0] - 1000000 * g.comp[1];
+	ret += 100000 * g.comp[2] - 100000 * g.comp[3];
+	ret += 10000 * g.comp[4] - 10000 * g.comp[5];
+	ret += 1000 * g.cap_b * g.cap_b - 1000 * g.cap_w * g.cap_w;
+	return ret / (2 << depth);
+}
+
+int minimax(Game &g, int depth, int &x, int &y, char c)
+{
+	int neg = (c == 'b' ? 1 : -1);
+	if (depth >= MAX_DEPTH || g.won)
+		return neg * eval(g, depth);
+
+	for (int k = 0; k < 6; k++)
+		if (t.comp[k])
+			return g.bestMove(x, y, c);
+	int ret = (g.turn != c ? INT_MAX : INT_MIN);
+	for (int i = 0; i < 19; i++)
+		for (int j = 0; j < 19; j++)
+		{
+			if (g.board[j][i] || !g.adjacent(i, j))
+				continue ;
+			Game t = g;
+			if (t.move(i, j) != -1)
+			{
+				int tx, ty;
+
+				int tmp = minimax(t, depth + 1, tx, ty, c);
+				if ((g.turn != c && tmp < ret) || (g.turn == c && tmp > ret))
+				{
+					ret = tmp;
+					x = i;
+					y = j;
+				}
+
+				if (g.turn == c)
+				{ //max
+					g.alpha = max(g.alpha, ret);
+					if (g.alpha >= g.beta)
+						return ret;
+				}
+				else
+				{ //min
+					g.beta = min(g.beta, ret);
+					if (g.alpha >= g.beta)
+						return ret;
+				}
+			}
+		}
+	return ret;
 }
 
 int Game::aiMove()
@@ -264,6 +308,6 @@ int Game::aiMove()
 
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	Selector::minimax(*this, 0, x, y, turn);
+	minimax(*this, 0, x, y, turn);
 	return move(x, y);
 }

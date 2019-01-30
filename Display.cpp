@@ -32,6 +32,10 @@ void	Display::get_input()
 			int y = event.motion.y * 19.0 / float(H);
 			if (game.move(x, y) == -1)
 				cout << "Invalid move\n";
+
+			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
+			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
+			cout << "Player : " << eval(game, 1) << endl;
 		}
 }
 
@@ -73,6 +77,11 @@ int		Display::run()
 		if (game.ai == game.turn)
 		{
 			game.aiMove();
+
+			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
+			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
+			cout << "AI : " << eval(game, 1) << endl;
+			
 			refresh();
 		}
 	}

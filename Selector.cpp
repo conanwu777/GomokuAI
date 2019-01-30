@@ -10,12 +10,8 @@ int eval(const Game &g, char c, int depth)
 	int ret = 0;
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
-		{
 			if (g.board[i][j] == c)
-			{
 				ret -= i + j;
-			}
-		}
 	return ret;
 }
 
