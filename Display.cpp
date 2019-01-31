@@ -1,5 +1,4 @@
 #include "Display.hpp"
-#include "Selector.hpp"
 
 void	Display::refresh()
 {
@@ -24,19 +23,22 @@ void	Display::refresh()
 
 void	Display::get_input()
 {
+	pos p;
+
 	while (SDL_PollEvent(&event))
 		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
 			exit (1);
 		else if (event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			int x = event.motion.x * 19.0 / float(W);
-			int y = event.motion.y * 19.0 / float(H);
-			if (game.move(x, y) == -1)
+			p.x = event.motion.x * 19.0 / float(W);
+			p.y = event.motion.y * 19.0 / float(H);
+			if (game.move(p) == -1)
 				cout << "Invalid move\n";
 
 			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "Player : " << Selector::eval(game, 1) << endl;
+			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+			cout << "Player : " << game.score << endl;
 		}
 }
 
@@ -81,7 +83,8 @@ int		Display::run()
 
 			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "AI : " << Selector::eval(game, 1) << endl;
+			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+			cout << "AI : " << game.score << endl;
 			
 			refresh();
 		}

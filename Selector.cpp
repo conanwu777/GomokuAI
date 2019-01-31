@@ -2,95 +2,86 @@
 
 pos Selector::killerAlpha[10];
 pos Selector::killerBeta[10];
+pos Selector::nxMove;
 
-int Selector::eval(const Game &g, int depth)
+int Selector::bestMove(Game &g, char c)
 {
-	if (g.won)
-		return (g.won == 'b' ? INT_MAX : INT_MIN) / (2 << depth);
-	int ret = 0;
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-		{
-			if (g.board[i][j] == 'b')
-				ret -= abs(i - 9) + abs(j - 9);
-			else if (g.board[i][j])
-				ret += abs(i - 9) + abs(j - 9);
-		}
-	ret += 1000000 * g.comp[0] - 1000000 * g.comp[1];
-	ret += 100000 * g.comp[2] - 100000 * g.comp[3];
-	ret += 10000 * g.comp[4] - 10000 * g.comp[5];
-	ret += 1000 * g.cap_b * g.cap_b - 1000 * g.cap_w * g.cap_w;
-	return ret / (2 << depth);
+	pos it;
+
+	for (it.y = 0; it.y < 19; it.y++)
+		for (it.x = 0; it.x < 19; it.x++)
+			if (!g.board[it.y][it.x])
+			{
+				Selector::nxMove = it;
+				g.move(it);
+				return g.score;
+			}
+	return 0;
 }
 
-// void	calcScore(Game &g, char c, int depth){
-// 	g.score = eval(g, c, depth);
-// }
-
-
-int	Selector::tryMove(Game &g, int depth, int &x, int &y, char c, int i, int j, int *ret){
+bool	Selector::tryMove(Game &g, int depth, char c, pos test, int *ret, bool last){
 	
 	Game t = g;
-	if (t.move(i, j) != -1)
+	if (t.move(test) != -1)
 	{
-		int tx, ty;
-
-		int tmp = Selector::minimax(t, depth + 1, tx, ty, c);
+		int tmp = Selector::minimax(t, depth + 1, c, last);
 		if ((g.turn != c && tmp < *ret) || (g.turn == c && tmp > *ret))
 		{
 			*ret = tmp;
-			x = i;
-			y = j;
+			Selector::nxMove = test;
 		}
 
 		if (g.turn == c)
 		{ //max
 			g.alpha = max(g.alpha, *ret);
-			killerAlpha[depth].x = i;
-			killerAlpha[depth].y = j;
+			killerAlpha[depth] = test;
 			if (g.alpha >= g.beta)
-				return *ret;
+				return true;
 		}
 		else
 		{ //min
 			g.beta = min(g.beta, *ret);
-			killerBeta[depth].x = i;
-			killerBeta[depth].y = j;
+			killerBeta[depth] = test;
 			if (g.alpha >= g.beta)
-				return *ret;
+				return true;
 		}
 	}
-	return INT_MIN;
+	return false;
 }
 
-
-int Selector::minimax(Game &g, int depth, int &x, int &y, char c)
+int Selector::minimax(Game &g, int depth, char c, bool last)
 {
 	int neg = (c == 'b' ? 1 : -1);
-	if (depth >= MAX_DEPTH || g.won)
-		return neg * eval(g, depth);
+	if (depth >= MAX_DEPTH || g.won || last)
+		return neg * g.score / (2 << depth);
+
+	for (int k = 0; k < 6; k++)
+		if (g.comp[k])
+			last = true;
 
 	int ret = (g.turn != c ? INT_MAX : INT_MIN);
 
-
-	if (!g.board[killerAlpha[depth].y][killerAlpha[depth].x] && g.adjacent(killerAlpha[depth].x, killerAlpha[depth].y))
-		if (tryMove(g, depth, x, y, c, killerAlpha[depth].x, killerAlpha[depth].y, &ret) == ret)
+	if (!g.board[killerAlpha[depth].y][killerAlpha[depth].x]
+		&& g.adjacent(killerAlpha[depth]))
+		if (tryMove(g, depth, c, killerAlpha[depth], &ret, last))
 			return ret;
 
-	if (!g.board[killerBeta[depth].y][killerBeta[depth].x] && g.adjacent(killerBeta[depth].x, killerBeta[depth].y))
-		if (tryMove(g, depth, x, y, c, killerBeta[depth].x, killerBeta[depth].y, &ret) == ret)
+	if (!g.board[killerBeta[depth].y][killerBeta[depth].x]
+		&& g.adjacent(killerBeta[depth]))
+		if (tryMove(g, depth, c, killerBeta[depth], &ret, last))
 			return ret;
 
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
+	pos iter;
+	for (iter.y = 0; iter.y < 19; iter.y++)
+		for (iter.x = 0; iter.x < 19; iter.x++)
 		{
-			if (i == killerAlpha[depth].x && j == killerAlpha[depth].y)
+			if (iter == killerAlpha[depth])
 				continue;
-			if (i == killerBeta[depth].x && j == killerBeta[depth].y)
+			if (iter == killerBeta[depth])
 				continue;
-			if (g.board[j][i] || !g.adjacent(i, j))
+			if (g.board[iter.y][iter.x] || !g.adjacent(iter))
 				continue ;
-			if (tryMove(g, depth, x, y, c, i, j, &ret) == ret)
+			if (tryMove(g, depth, c, iter, &ret, last))
 				return ret;
 		}
 	return ret;

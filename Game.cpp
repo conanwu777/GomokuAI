@@ -7,29 +7,29 @@ bool Game::inBound(int x, int y) const
 	return (x >= 0 && y >= 0 && x < 19 && y < 19);
 }
 
-bool Game::adjacent(int x, int y) const
+bool Game::adjacent(pos p) const
 {
-	if (inBound(x - 1, y) && board[y][x - 1])
+	if (inBound(p.x - 1, p.y) && board[p.y][p.x - 1])
 		return true;
-	if (inBound(x, y - 1) && board[y - 1][x])
+	if (inBound(p.x, p.y - 1) && board[p.y - 1][p.x])
 		return true;
-	if (inBound(x + 1, y) && board[y][x + 1])
+	if (inBound(p.x + 1, p.y) && board[p.y][p.x + 1])
 		return true;
-	if (inBound(x, y + 1) && board[y + 1][x])
+	if (inBound(p.x, p.y + 1) && board[p.y + 1][p.x])
 		return true;
-	if (inBound(x - 1, y - 1) && board[y - 1][x - 1])
+	if (inBound(p.x - 1, p.y - 1) && board[p.y - 1][p.x - 1])
 		return true;
-	if (inBound(x + 1, y + 1) && board[y + 1][x + 1])
+	if (inBound(p.x + 1, p.y + 1) && board[p.y + 1][p.x + 1])
 		return true;
-	if (inBound(x + 1, y - 1) && board[y - 1][x + 1])
+	if (inBound(p.x + 1, p.y - 1) && board[p.y - 1][p.x + 1])
 		return true;
-	if (inBound(x - 1, y + 1) && board[y + 1][x - 1])
+	if (inBound(p.x - 1, p.y + 1) && board[p.y + 1][p.x - 1])
 		return true;
 	return false;
 }
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX)
+alpha(INT_MIN), beta(INT_MAX), score(0)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -43,6 +43,7 @@ Game& Game::operator=(const Game &g)
 	ai = g.ai;
 	turn = g.turn;
 	won = g.won;
+	score = g.score;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
 	for (int x = 0; x < 19; x++)
@@ -83,6 +84,8 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 		{
 			if (open && c == 4)
 				comp[(cur == 'b' ? 0 : 1)]++;
+			else if (c == 4)
+				comp[(cur == 'b' ? 2 : 3)]++;
 			if (open && c == 3)
 				comp[(cur == 'b' ? 4 : 5)]++;
 			open = true;
@@ -120,39 +123,43 @@ char Game::checkWin()
 	}
 	return 0;
 }
-bool Game::capture(int x, int y, int dx, int dy, char opp)
+
+bool Game::capture(pos p, int dx, int dy, char opp)
 {
-	if (inBound(x + 3 * dx, y + 3 * dy)
-		&& board[y + dy][x + dx] == opp
-		&& board[y + 2 * dy][x + 2 * dx] == opp
-		&& board[y + 3 * dy][x + 3 * dx] == turn)
+	pos d;
+	d.x = dx;
+	d.y = dy;
+	if (inBound(p.x + 3 * d.x, p.y + 3 * d.y)
+		&& board[p.y + dy][p.x + dx] == opp
+		&& board[p.y + 2 * dy][p.x + 2 * dx] == opp
+		&& board[p.y + 3 * dy][p.x + 3 * dx] == turn)
 	{
-		board[y + dy][x + dx] = 0;
-		board[y + 2 * dy][x + 2 * dx] = 0;
+		board[p.y + dy][p.x + dx] = 0;
+		board[p.y + 2 * dy][p.x + 2 * dx] = 0;
 		return true;
 	}
 	return false;
 }
 
-bool Game::checkCapture(int x, int y)
+bool Game::checkCapture(pos p)
 {
 	int c = 0;
 	char opp = (turn == 'b' ? 'w' : 'b');
-	if (capture(x, y, 1, 0, opp))
+	if (capture(p, 1, 0, opp))
 		c++;
-	if (capture(x, y, 0, 1, opp))
+	if (capture(p, 0, 1, opp))
 		c++;
-	if (capture(x, y, -1, 0, opp))
+	if (capture(p, -1, 0, opp))
 		c++;
-	if (capture(x, y, 0, -1, opp))
+	if (capture(p, 0, -1, opp))
 		c++;
-	if (capture(x, y, 1, 1, opp))
+	if (capture(p, 1, 1, opp))
 		c++;
-	if (capture(x, y, 1, -1, opp))
+	if (capture(p, 1, -1, opp))
 		c++;
-	if (capture(x, y, -1, 1, opp))
+	if (capture(p, -1, 1, opp))
 		c++;
-	if (capture(x, y, -1, -1, opp))
+	if (capture(p, -1, -1, opp))
 		c++;
 	(turn == 'b' ? cap_b : cap_w) += 2 * c;
 	if ((turn == 'b' ? cap_b : cap_w) >= 10)
@@ -165,6 +172,7 @@ bool Game::checkLineThrees(deque<char> &line, char target)
 	bool leftOpen = false;
 	int count = 0;
 	bool hole = false;
+	int num = 0;
 	for (auto i = line.begin(); i != line.end() ; i++)
 		if (*i == 0)
 		{
@@ -185,67 +193,95 @@ bool Game::checkLineThrees(deque<char> &line, char target)
 	return 0;
 }
 
-int Game::checkThree(int x, int y, int xOff, int yOff)
+int Game::checkThree(pos p, int x, int y)
 {
+	bool emptyLeft = false;
+	bool emptyRight = false;
 	deque<char> cur;
+	pos off;
 
+	off.x = x;
+	off.y = y;
 	for (int i = -4; i < 5; i++)
 	{
 		if (cur.size() >= 6)
 			cur.pop_front();
-		if (x + i * xOff >= 0 && x + i * xOff < 19
-			&& y + i * yOff >= 0 && y + i * yOff < 19)
-			cur.push_back(board[y + i * yOff][x + i * xOff]);
+		if (inBound(p.x + i * off.x, p.y + i * off.y))
+			cur.push_back(board[y + i * off.y][x + i * off.x]);
 		if (checkLineThrees(cur, turn))
 			return 1;
 	}
 	return 0;
 }
 
-bool Game::checkValid(int x, int y)
+bool Game::checkValid(pos p)
 {
 	int count = 0;
-	count += checkThree(x, y, 1, 0);
-	count += checkThree(x, y, 0, 1);
-	count += checkThree(x, y, 1, 1);
-	count += checkThree(x, y, 1, -1);
-	if (count >= 2){
+	count += checkThree(p, 1, 0);
+	count += checkThree(p, 0, 1);
+	count += checkThree(p, 1, 1);
+	count += checkThree(p, 1, -1);
+	if (count >= 2)
 		return false;
-	}
 	return true;
 }
 
-int Game::move(int x, int y)
+void Game::getScore()
+{
+	if (won)
+	{
+		score = (won == 'b' ? INT_MAX : INT_MIN);
+		return ;
+	}
+	int ret = 0;
+	for (int i = 0; i < 19; i++)
+		for (int j = 0; j < 19; j++)
+		{
+			if (board[i][j] == 'b')
+				ret -= abs(i - 9) + abs(j - 9);
+			else if (board[i][j])
+				ret += abs(i - 9) + abs(j - 9);
+		}
+	int coeb = (turn == 'b' ? 1 : 2);
+	int coew = (turn == 'w' ? 1 : 2);
+	ret += coeb * 1000000 * comp[0] - coew * 1000000 * comp[1];
+	ret += coeb * 100000 * comp[2] - coew * 100000 * comp[3];
+	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
+	ret += coeb * 5000 * cap_b * cap_b - coew * 5000 * cap_w * cap_w;
+	score = ret;
+}
+
+int Game::move(pos p)
 {
 	bool capture = true;
 
-	if (!inBound(x, y) || board[y][x])
+	if (!inBound(p.x, p.y) || board[p.y][p.x])
 		return -1;
-	board[y][x] = turn;
+	board[p.y][p.x] = turn;
 	won = checkWin();
 	if (!won)
-		capture = checkCapture(x, y);
+		capture = checkCapture(p);
 	if (!capture)
-		if (!checkValid(x, y))
+		if (!checkValid(p))
 		{
-			board[y][x] = 0;
+			board[p.y][p.x] = 0;
 			return -1;
 		}
-	
+	getScore();
 	turn = (turn == 'b' ? 'w' : 'b');
 	return 1;
 }
 
-
 int Game::aiMove()
 {
-	int x, y;
-
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	Selector::minimax(*this, 0, x, y, turn);
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() / 1000.0f<<std::endl;
-	return move(x, y);
+	Selector::minimax(*this, 0, turn, false);
+	std::chrono::steady_clock::time_point
+	end = std::chrono::steady_clock::now();
+	std::cout << "Time difference = " <<
+	std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
+	/ 1000.0f << std::endl;
+	return move(Selector::nxMove);
 }

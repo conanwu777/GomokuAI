@@ -2,6 +2,27 @@
 #include "Game.hpp"
 #include "Display.hpp"
 
+bool operator==(const pos& lhs, const pos& rhs)
+{
+    return (lhs.x == rhs.x && lhs.y == rhs.y);
+}
+
+pos operator*(int num, const pos& p)
+{
+    pos nPos;
+    nPos.x = p.x * num;
+	nPos.y = p.y * num;
+   return nPos;
+}
+
+pos operator+(const pos& p, const pos& other)
+{
+  pos nPos;
+  nPos.x = p.x + other.x;
+  nPos.y = p.y + other.y;
+  return nPos;
+}
+
 int main (int ac, char **av)
 {
 	char ai;

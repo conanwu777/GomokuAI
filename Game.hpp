@@ -3,7 +3,9 @@
 # include "gomoku.hpp"
 # include <deque>
 
-# define MAX_DEPTH 5
+# define MAX_DEPTH 4
+
+class Selector;
 
 class Game {
 public:
@@ -13,6 +15,7 @@ public:
 	char ai;
 	char turn;
 	char won;
+	int score;
 	int cap_b;
 	int cap_w;
 	char board[19][19];
@@ -21,19 +24,17 @@ public:
 	Game& operator=(const Game &g);
 	~Game();
 	int aiMove();
-	int move(int x, int y);
+	int move(pos p);
 	char checkWin();
-	bool capture(int x, int y, int dx, int dy, char opp);
-	bool checkCapture(int x, int y);
+	bool capture(pos p, int x, int y, char opp);
+	bool checkCapture(pos p);
 	bool inBound(int x, int y) const;
-	bool adjacent(int x, int y) const;
-	bool checkValid(int, int);
-	int checkThree(int x, int y, int xOff, int yOff);   
+	bool adjacent(pos p) const;
+	bool checkValid(pos p);
+	int checkThree(pos p, int x, int y);   
 	bool checkLineThrees(deque<char> &line, char target);
 	char checkLine(int stx, int sty, int incx, int incy);
+	void getScore();
 };
-
-int eval(const Game &, int depth);
-int minimax(Game &g, int depth, int &x, int &y, char c);
 
 #endif
