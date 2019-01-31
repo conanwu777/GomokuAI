@@ -1,4 +1,5 @@
 #include "Game.hpp"
+#include "Selector.hpp"
 
 bool Game::inBound(int x, int y) const
 {
@@ -163,7 +164,6 @@ bool Game::checkLineThrees(deque<char> &line, char target)
 	bool leftOpen = false;
 	int count = 0;
 	bool hole = false;
-	int num = 0;
 	for (auto i = line.begin(); i != line.end() ; i++)
 		if (*i == 0)
 		{
@@ -186,8 +186,6 @@ bool Game::checkLineThrees(deque<char> &line, char target)
 
 int Game::checkThree(int x, int y, int xOff, int yOff)
 {
-	bool emptyLeft = false;
-	bool emptyRight = false;
 	deque<char> cur;
 
 	for (int i = -4; i < 5; i++)
@@ -237,70 +235,6 @@ int Game::move(int x, int y)
 	return 1;
 }
 
-int eval(const Game &g, int depth)
-{
-	if (g.won)
-		return (g.won == 'b' ? INT_MAX : INT_MIN) / (2 << depth);
-	int ret = 0;
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-		{
-			if (g.board[i][j] == 'b')
-				ret -= abs(i - 9) + abs(j - 9);
-			else if (g.board[i][j])
-				ret += abs(i - 9) + abs(j - 9);
-		}
-	ret += 1000000 * g.comp[0] - 1000000 * g.comp[1];
-	ret += 100000 * g.comp[2] - 100000 * g.comp[3];
-	ret += 10000 * g.comp[4] - 10000 * g.comp[5];
-	ret += 1000 * g.cap_b * g.cap_b - 1000 * g.cap_w * g.cap_w;
-	return ret / (2 << depth);
-}
-
-int minimax(Game &g, int depth, int &x, int &y, char c)
-{
-	int neg = (c == 'b' ? 1 : -1);
-	if (depth >= MAX_DEPTH || g.won)
-		return neg * eval(g, depth);
-
-	for (int k = 0; k < 6; k++)
-		if (t.comp[k])
-			return g.bestMove(x, y, c);
-	int ret = (g.turn != c ? INT_MAX : INT_MIN);
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-		{
-			if (g.board[j][i] || !g.adjacent(i, j))
-				continue ;
-			Game t = g;
-			if (t.move(i, j) != -1)
-			{
-				int tx, ty;
-
-				int tmp = minimax(t, depth + 1, tx, ty, c);
-				if ((g.turn != c && tmp < ret) || (g.turn == c && tmp > ret))
-				{
-					ret = tmp;
-					x = i;
-					y = j;
-				}
-
-				if (g.turn == c)
-				{ //max
-					g.alpha = max(g.alpha, ret);
-					if (g.alpha >= g.beta)
-						return ret;
-				}
-				else
-				{ //min
-					g.beta = min(g.beta, ret);
-					if (g.alpha >= g.beta)
-						return ret;
-				}
-			}
-		}
-	return ret;
-}
 
 int Game::aiMove()
 {
@@ -308,6 +242,6 @@ int Game::aiMove()
 
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	minimax(*this, 0, x, y, turn);
+	Selector::minimax(*this, 0, x, y, turn);
 	return move(x, y);
 }

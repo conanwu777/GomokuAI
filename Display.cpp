@@ -1,4 +1,5 @@
 #include "Display.hpp"
+#include "Selector.hpp"
 
 void	Display::refresh()
 {
@@ -35,7 +36,7 @@ void	Display::get_input()
 
 			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "Player : " << eval(game, 1) << endl;
+			cout << "Player : " << Selector::eval(game, 1) << endl;
 		}
 }
 
@@ -80,7 +81,7 @@ int		Display::run()
 
 			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "AI : " << eval(game, 1) << endl;
+			cout << "AI : " << Selector::eval(game, 1) << endl;
 			
 			refresh();
 		}
