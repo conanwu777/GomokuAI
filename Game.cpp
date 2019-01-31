@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Selector.hpp"
+#include <chrono>
 
 bool Game::inBound(int x, int y) const
 {
@@ -240,8 +241,11 @@ int Game::aiMove()
 {
 	int x, y;
 
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	alpha = INT_MIN;
 	beta = INT_MAX;
 	Selector::minimax(*this, 0, x, y, turn);
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() / 1000.0f<<std::endl;
 	return move(x, y);
 }

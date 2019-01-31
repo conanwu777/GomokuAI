@@ -81,12 +81,13 @@ int Selector::minimax(Game &g, int depth, int &x, int &y, char c)
 		if (tryMove(g, depth, x, y, c, killerBeta[depth].x, killerBeta[depth].y, &ret) == ret)
 			return ret;
 
-	// for (int k = 0; k < 6; k++)
-	// 	if (t.comp[k])
-	// 		return g.bestMove(x, y, c);
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
 		{
+			if (i == killerAlpha[depth].x && j == killerAlpha[depth].y)
+				continue;
+			if (i == killerBeta[depth].x && j == killerBeta[depth].y)
+				continue;
 			if (g.board[j][i] || !g.adjacent(i, j))
 				continue ;
 			if (tryMove(g, depth, x, y, c, i, j, &ret) == ret)

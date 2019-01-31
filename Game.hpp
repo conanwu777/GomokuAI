@@ -3,7 +3,7 @@
 # include "gomoku.hpp"
 # include <deque>
 
-# define MAX_DEPTH 4
+# define MAX_DEPTH 5
 
 class Game {
 public:
