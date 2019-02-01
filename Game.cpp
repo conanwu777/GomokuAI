@@ -119,7 +119,6 @@ char Game::checkWin()
 			return ret;
 		if (i > 0 && (ret = checkLine(i, 18, 1, -1)))
 			return ret;
-
 	}
 	return 0;
 }
@@ -230,7 +229,7 @@ void Game::getScore()
 {
 	if (won)
 	{
-		score = (won == 'b' ? INT_MAX : INT_MIN);
+		score = (won == 'b' ? 10000000 : -10000000);
 		return ;
 	}
 	int ret = 0;
@@ -277,7 +276,8 @@ int Game::aiMove()
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	Selector::minimax(*this, 0, turn, false);
+	Game g = *this;
+	Selector::minimax(g, 0, turn, false);
 	std::chrono::steady_clock::time_point
 	end = std::chrono::steady_clock::now();
 	std::cout << "Time difference = " <<

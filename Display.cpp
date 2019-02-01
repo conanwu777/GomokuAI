@@ -1,4 +1,5 @@
 #include "Display.hpp"
+#include "Selector.hpp"
 
 void	Display::refresh()
 {
@@ -24,7 +25,6 @@ void	Display::refresh()
 void	Display::get_input()
 {
 	pos p;
-
 	while (SDL_PollEvent(&event))
 		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
 			exit (1);
@@ -79,13 +79,16 @@ int		Display::run()
 		refresh();
 		if (game.ai == game.turn)
 		{
-			game.aiMove();
+cout << "1 " << (game.board[10][10] ? "yes\n" : "no\n");
+			if (game.aiMove() == -1)
+				cout << "error : " << Selector::nxMove.x << ", " << Selector::nxMove.y << endl;
 
-			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
-			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
-			cout << "AI : " << game.score << endl;
-			
+			// cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
+			// cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
+			// cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+			// cout << "AI : " << game.score << endl;
+			if (game.won)
+				cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
 			refresh();
 		}
 	}
