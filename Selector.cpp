@@ -29,7 +29,8 @@ int *ret, bool last)
 		if ((g.turn != c && tmp < *ret) || (g.turn == c && tmp > *ret))
 		{
 			*ret = tmp;
-			Selector::nxMove = test;
+			if (depth == 0)
+				Selector::nxMove = test;
 			if (g.turn == c)
 			{
 				g.alpha = max(g.alpha, *ret);

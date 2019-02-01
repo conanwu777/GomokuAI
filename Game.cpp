@@ -65,36 +65,40 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 {
 	bool open = false;
 	bool first = true;
-	int c = 0;
-	char cur;
+	int curBlock = 0;
+	char curPlayer = 0;
+	int prevBlock = 0;
+	char prevPlayer = -1;
 	while (inBound(stx, sty))
 	{
 		if (board[sty][stx] && !first
 			&& board[sty - incy][stx - incx] == board[sty][stx])
-			c++;
+			curBlock++;
 		else if (board[sty][stx])
 		{
-			if (open && c == 4)
-				comp[(cur == 'b' ? 2 : 3)]++;
+			if ((open && curBlock == 4) || (curBlock + prevBlock == 4 && curPlayer == prevPlayer))
+				comp[(curPlayer == 'b' ? 2 : 3)]++;
 			open = true;
 			if (first || board[sty - incy][stx - incx])
 				open = false;
-			c = 1;
-			cur = board[sty][stx];
+			curBlock = 1;
+			curPlayer = board[sty][stx];
 		}
 		else
 		{
-			if (open && c == 4)
-				comp[(cur == 'b' ? 0 : 1)]++;
-			else if (c == 4)
-				comp[(cur == 'b' ? 2 : 3)]++;
-			if (open && c == 3)
-				comp[(cur == 'b' ? 4 : 5)]++;
+			if (open && curBlock == 4)
+				comp[(curPlayer == 'b' ? 0 : 1)]++;
+			else if (curBlock == 4 || (curBlock + prevBlock == 4 && curPlayer == prevPlayer))
+				comp[(curPlayer == 'b' ? 2 : 3)]++;
+			if (open && (curBlock == 3 || (curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
+				comp[(curPlayer == 'b' ? 4 : 5)]++;
+			prevBlock = curBlock;
+			prevPlayer = curPlayer;
 			open = true;
-			c = 0;
+			curBlock = 0;
 		}
-		if (c >= 5)
-			return cur;
+		if (curBlock >= 5)
+			return curPlayer;
 		stx += incx;
 		sty += incy;
 		first = false;
