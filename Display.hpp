@@ -3,6 +3,7 @@
 
 # include "gomoku.hpp"
 # include "Game.hpp"
+# include <stack>
 # include <SDL2/SDL.h>
 
 # define W 1200
@@ -20,6 +21,8 @@ private:
     Display();
 
 public:
+    stack<Game> hist;
+    stack<Game> forward;
     Display(Game g);
     ~Display();
     void refresh();

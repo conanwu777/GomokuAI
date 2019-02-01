@@ -59,27 +59,65 @@ int		Display::run()
 	while (1)
 	{
 		while (SDL_PollEvent(&event))
+		{
 			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
 				exit (1);
 			else if (event.type == SDL_MOUSEBUTTONDOWN)
 			{
 				p.x = event.motion.x * 19.0 / float(W);
 				p.y = event.motion.y * 19.0 / float(H);
+				hist.push(game);
+				while (forward.size())
+					forward.pop();
 				if (game.move(p) == -1)
+				{
 					cout << "Invalid move\n";
+					hist.pop();
+				}
 				cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 				cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
 				cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+				cout << "1000 * " << game.comp[6] << ", " << game.comp[7] << endl;
 				cout << "Player : " << game.score << endl;
 			}
+			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_LEFT && hist.size())
+			{
+				forward.push(game);
+				game = hist.top();
+				hist.pop();
+				while (hist.size() && game.turn == game.ai)
+				{
+					forward.push(game);
+					game = hist.top();
+					hist.pop();
+				}
+			}
+			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_RIGHT && forward.size())
+			{
+				hist.push(game);
+				game = forward.top();
+				forward.pop();
+				while (forward.size() && game.turn == game.ai)
+				{
+					hist.push(game);
+					game = forward.top();
+					forward.pop();
+				}
+			}
+		}
 		refresh();
 		if (game.ai == game.turn)
 		{
+			hist.push(game);
 			if (game.aiMove() == -1)
+			{
 				cout << "Invalid move\n";
+				hist.pop();
+			}
 			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
 			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
 			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+			cout << "1000 * " << game.comp[6] << ", " << game.comp[7] << endl;
 			cout << "AI : " << game.score << endl;
 			refresh();
 		}

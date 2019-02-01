@@ -49,7 +49,7 @@ Game& Game::operator=(const Game &g)
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 8; i++)
 		comp[i] = g.comp[i];
 	return *this;
 }
@@ -71,27 +71,45 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 	char prevPlayer = -1;
 	while (inBound(stx, sty))
 	{
-		if (board[sty][stx] && !first
-			&& board[sty - incy][stx - incx] == board[sty][stx])
+		if (board[sty][stx] && !first &&
+			board[sty - incy][stx - incx] == board[sty][stx])
 			curBlock++;
 		else if (board[sty][stx])
 		{
-			if ((open && curBlock == 4) || (curBlock + prevBlock == 4 && curPlayer == prevPlayer))
+			if ((open && curBlock == 4) || (prevBlock &&
+				curBlock + prevBlock == 4 && curBlock != 0 && curPlayer == prevPlayer))
+			{
+// cout << "1 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
+// cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
+			}
+			else if ((open && curBlock == 3) || (prevBlock &&
+				curBlock + prevBlock == 3 && curBlock != 0  && curPlayer == prevPlayer))
+				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			open = true;
 			if (first || board[sty - incy][stx - incx])
 				open = false;
 			curBlock = 1;
 			curPlayer = board[sty][stx];
+			prevBlock = 0;
 		}
 		else
 		{
 			if (open && curBlock == 4)
 				comp[(curPlayer == 'b' ? 0 : 1)]++;
-			else if (curBlock == 4 || (curBlock + prevBlock == 4 && curPlayer == prevPlayer))
+			else if (curBlock == 4 || (prevBlock &&
+				curBlock + prevBlock == 4 && curBlock != 0 && curPlayer == prevPlayer))
+			{
+// cout << "2 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
+// cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
-			if (open && (curBlock == 3 || (curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
+			}
+			else if (open && (curBlock == 3 || (prevBlock &&
+				curBlock + prevBlock == 3 && curBlock != 0  && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
+			else if (open && (curBlock == 2 || (prevBlock &&
+				curBlock + prevBlock == 2  && curBlock != 0 && curPlayer == prevPlayer)))
+				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			prevBlock = curBlock;
 			prevPlayer = curPlayer;
 			open = true;
@@ -110,7 +128,7 @@ char Game::checkWin()
 {
 	char ret = 0;
 
-	bzero(&comp[0], sizeof(int) * 6);
+	bzero(&comp[0], sizeof(int) * 8);
 	for (int i = 0; i < 19; i++)
 	{
 		if ((ret = checkLine(0, i, 1, 0)))
@@ -166,8 +184,8 @@ bool Game::checkCapture(pos p)
 		c++;
 	if (capture(p, -1, -1, opp))
 		c++;
-	(turn == 'b' ? cap_b : cap_w) += 2 * c;
-	if ((turn == 'b' ? cap_b : cap_w) >= 10)
+	(turn == 'b' ? cap_b : cap_w) += c;
+	if ((turn == 'b' ? cap_b : cap_w) >= 5)
 		won = turn;
 	return c != 0;
 }
@@ -212,7 +230,7 @@ int Game::checkThree(pos p, int x, int y)
 		if (cur.size() >= 6)
 			cur.pop_front();
 		if (inBound(p.x + i * off.x, p.y + i * off.y))
-			cur.push_back(board[y + i * off.y][x + i * off.x]);
+			cur.push_back(board[p.y + i * off.y][p.x + i * off.x]);
 		if (checkLineThrees(cur, turn))
 			return 1;
 	}
@@ -235,7 +253,10 @@ void Game::getScore()
 {
 	if (won)
 	{
-		score = (won == 'b' ? 10000000 : -10000000);
+		if (cap_b >= 5 || cap_w >= 5)
+			score = (won == 'b' ? 2000000000 : -2000000000);
+		else
+			score = (won == 'b' ? 1000000000 : -1000000000);
 		return ;
 	}
 	int ret = 0;
@@ -243,16 +264,20 @@ void Game::getScore()
 		for (int j = 0; j < 19; j++)
 		{
 			if (board[i][j] == 'b')
-				ret -= abs(i - 9) + abs(j - 9);
+				ret -= 8 * (abs(i - 9) + abs(j - 9));
 			else if (board[i][j])
-				ret -= abs(i - 9) + abs(j - 9);
+				ret += 8 * (abs(i - 9) + abs(j - 9));
 		}
-	int coeb = (turn == 'b' ? 1 : 2);
-	int coew = (turn == 'w' ? 1 : 2);
+	int coeb = (turn == 'b' ? 1 : 10);
+	int coew = (turn == 'w' ? 1 : 10);
 	ret += coeb * 1000000 * comp[0] - coew * 1000000 * comp[1];
-	ret += coeb * 100000 * comp[2] - coew * 100000 * comp[3];
+	ret += coeb * 200000 * comp[2] - coew * 200000 * comp[3];
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
-	ret += coeb * 5000 * pow(cap_b, 6) - coew * 5000 * pow(cap_w, 6);
+	ret += 1000 * comp[6] - 1000 * comp[7];
+	if (cap_b)
+		ret += 10000 + 4000 * (cap_b * cap_b);
+	if (cap_w)
+		ret -= 10000 + 4000 * (cap_w * cap_w);
 	score = ret;
 }
 
@@ -263,9 +288,8 @@ int Game::move(pos p)
 	if (!inBound(p.x, p.y) || board[p.y][p.x])
 		return -1;
 	board[p.y][p.x] = turn;
+	capture = checkCapture(p);
 	won = checkWin();
-	if (!won)
-		capture = checkCapture(p);
 	if (!capture)
 		if (!checkValid(p))
 		{
@@ -279,7 +303,8 @@ int Game::move(pos p)
 
 int Game::aiMove()
 {
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point begin
+	= std::chrono::steady_clock::now();
 	alpha = INT_MIN;
 	beta = INT_MAX;
 	Game g = *this;

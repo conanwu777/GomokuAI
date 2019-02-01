@@ -3,13 +3,11 @@
 # include "gomoku.hpp"
 # include <deque>
 
-# define MAX_DEPTH 4
-
 class Selector;
 
 class Game {
 public:
-	int comp[6];
+	int comp[8];
 	int alpha;
     int beta;
 	char ai;
