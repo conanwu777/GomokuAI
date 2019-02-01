@@ -20,26 +20,8 @@ void	Display::refresh()
 		}
 	}
 	SDL_RenderPresent(rend);
-}
-
-void	Display::get_input()
-{
-	pos p;
-	while (SDL_PollEvent(&event))
-		if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
-			exit (1);
-		else if (event.type == SDL_MOUSEBUTTONDOWN)
-		{
-			p.x = event.motion.x * 19.0 / float(W);
-			p.y = event.motion.y * 19.0 / float(H);
-			if (game.move(p) == -1)
-				cout << "Invalid move\n";
-
-			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
-			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
-			cout << "Player : " << game.score << endl;
-		}
+	if (game.won)
+		cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
 }
 
 Display::Display() {}
@@ -68,6 +50,7 @@ Display::~Display(){
 
 int		Display::run()
 {
+	pos p;
 	if (game.ai == 'b')
 	{
 		game.board[9][9] = 'b';
@@ -75,20 +58,29 @@ int		Display::run()
 	}
 	while (1)
 	{
-		get_input();
+		while (SDL_PollEvent(&event))
+			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
+				exit (1);
+			else if (event.type == SDL_MOUSEBUTTONDOWN)
+			{
+				p.x = event.motion.x * 19.0 / float(W);
+				p.y = event.motion.y * 19.0 / float(H);
+				if (game.move(p) == -1)
+					cout << "Invalid move\n";
+				cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
+				cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
+				cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+				cout << "Player : " << game.score << endl;
+			}
 		refresh();
 		if (game.ai == game.turn)
 		{
-cout << "1 " << (game.board[10][10] ? "yes\n" : "no\n");
 			if (game.aiMove() == -1)
-				cout << "error : " << Selector::nxMove.x << ", " << Selector::nxMove.y << endl;
-
-			// cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
-			// cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			// cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
-			// cout << "AI : " << game.score << endl;
-			if (game.won)
-				cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
+				cout << "Invalid move\n";
+			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
+			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
+			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
+			cout << "AI : " << game.score << endl;
 			refresh();
 		}
 	}

@@ -49,6 +49,8 @@ Game& Game::operator=(const Game &g)
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
+	for (int i = 0; i < 6; i++)
+		comp[i] = g.comp[i];
 	return *this;
 }
 
@@ -239,14 +241,14 @@ void Game::getScore()
 			if (board[i][j] == 'b')
 				ret -= abs(i - 9) + abs(j - 9);
 			else if (board[i][j])
-				ret += abs(i - 9) + abs(j - 9);
+				ret -= abs(i - 9) + abs(j - 9);
 		}
 	int coeb = (turn == 'b' ? 1 : 2);
 	int coew = (turn == 'w' ? 1 : 2);
 	ret += coeb * 1000000 * comp[0] - coew * 1000000 * comp[1];
 	ret += coeb * 100000 * comp[2] - coew * 100000 * comp[3];
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
-	ret += coeb * 5000 * cap_b * cap_b - coew * 5000 * cap_w * cap_w;
+	ret += coeb * 5000 * pow(cap_b, 6) - coew * 5000 * pow(cap_w, 6);
 	score = ret;
 }
 

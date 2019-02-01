@@ -3,6 +3,7 @@
 # include <iostream>
 # include <cstdlib>
 # include <ctime>
+# include <math.h>
 
 using namespace std;
 

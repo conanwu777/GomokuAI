@@ -30,17 +30,15 @@ int *ret, bool last)
 		{
 			*ret = tmp;
 			Selector::nxMove = test;
-			// cout << "next move updated : " << test.x << ", " << test.y
-			// << " score : " << tmp << endl;
 			if (g.turn == c)
-			{ //max
+			{
 				g.alpha = max(g.alpha, *ret);
 				killerAlpha[depth] = test;
 				if (g.alpha >= g.beta)
 					return true;
 			}
 			else
-			{ //min
+			{
 				g.beta = min(g.beta, *ret);
 				killerBeta[depth] = test;
 				if (g.alpha >= g.beta)

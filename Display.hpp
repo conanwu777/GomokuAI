@@ -24,7 +24,6 @@ public:
     ~Display();
     void refresh();
     void SDL_Start();
-    void get_input();
     int run();
 };
 
