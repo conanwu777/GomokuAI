@@ -76,15 +76,15 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			curBlock++;
 		else if (board[sty][stx])
 		{
-			if ((open && curBlock == 4) || (prevBlock &&
-				curBlock + prevBlock == 4 && curBlock != 0 && curPlayer == prevPlayer))
+			if ((open && curBlock == 4) || (prevBlock && curBlock &&
+				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
 			{
-// cout << "1 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
-// cout << "blocks : " << curBlock << " , " << prevBlock << endl;
+cout << "1 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
+cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
 			}
-			else if ((open && curBlock == 3) || (prevBlock &&
-				curBlock + prevBlock == 3 && curBlock != 0  && curPlayer == prevPlayer))
+			else if ((open && curBlock == 3) || (prevBlock && curBlock &&
+				curBlock + prevBlock == 3 && curPlayer == prevPlayer))
 				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			open = true;
 			if (first || board[sty - incy][stx - incx])
@@ -97,18 +97,18 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 		{
 			if (open && curBlock == 4)
 				comp[(curPlayer == 'b' ? 0 : 1)]++;
-			else if (curBlock == 4 || (prevBlock &&
-				curBlock + prevBlock == 4 && curBlock != 0 && curPlayer == prevPlayer))
+			else if (curBlock == 4 || (prevBlock && curBlock &&
+				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
 			{
-// cout << "2 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
-// cout << "blocks : " << curBlock << " , " << prevBlock << endl;
+cout << "2 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
+cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
 			}
-			else if (open && (curBlock == 3 || (prevBlock &&
-				curBlock + prevBlock == 3 && curBlock != 0  && curPlayer == prevPlayer)))
+			else if (open && (curBlock == 3 || (prevBlock && curBlock &&
+				curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
-			else if (open && (curBlock == 2 || (prevBlock &&
-				curBlock + prevBlock == 2  && curBlock != 0 && curPlayer == prevPlayer)))
+			else if (open && (curBlock == 2 || (prevBlock && curBlock &&
+				curBlock + prevBlock == 2  && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			prevBlock = curBlock;
 			prevPlayer = curPlayer;
