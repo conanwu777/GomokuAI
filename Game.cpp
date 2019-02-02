@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Selector.hpp"
+#include "Display.hpp"
 #include <chrono>
 
 bool Game::inBound(int x, int y) const
@@ -63,6 +64,7 @@ Game::~Game() {}
 
 char Game::checkLine(int stx, int sty, int incx, int incy)
 {
+	bool prevOpen = false;
 	bool open = false;
 	bool first = true;
 	int curBlock = 0;
@@ -97,7 +99,7 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			else if (curBlock == 4 || (prevBlock && curBlock &&
 				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
-			else if (open && (curBlock == 3 || (prevBlock && curBlock &&
+			else if (open && (curBlock == 3 || (prevOpen && prevBlock && curBlock &&
 				curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
 			else if (open && (curBlock == 2 || (prevBlock && curBlock &&
@@ -105,6 +107,7 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			prevBlock = curBlock;
 			prevPlayer = curPlayer;
+			prevOpen = open;
 			open = true;
 			curBlock = 0;
 		}
@@ -282,7 +285,8 @@ int Game::move(pos p)
 		return -1;
 	board[p.y][p.x] = turn;
 	capture = checkCapture(p);
-	won = checkWin();
+	if (!won)
+		won = checkWin();
 	if (!capture)
 		if (!checkValid(p))
 		{
@@ -296,16 +300,9 @@ int Game::move(pos p)
 
 int Game::aiMove()
 {
-	std::chrono::steady_clock::time_point begin
-	= std::chrono::steady_clock::now();
 	alpha = INT_MIN;
 	beta = INT_MAX;
 	Game g = *this;
 	Selector::minimax(g, 0, turn, false);
-	std::chrono::steady_clock::time_point
-	end = std::chrono::steady_clock::now();
-	std::cout << "Time difference = " <<
-	std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()
-	/ 1000.0f << std::endl;
 	return move(Selector::nxMove);
 }

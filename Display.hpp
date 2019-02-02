@@ -9,31 +9,45 @@
 # define W 1600
 # define H 1000
 
+struct timeFrame{
+    int milli;
+    int sec;
+    int min;
+};
+
 class Display {
 private:
-	SDL_Window *win;
-	SDL_Renderer *rend;
-	SDL_Event event;
-	SDL_Texture* background;
-	SDL_Texture* white;
-	SDL_Texture* black;
-	SDL_Texture* manIcon;
-	SDL_Texture* aiIcon;
-	Game game;
-	Display();
+    SDL_Window *win;
+    SDL_Renderer *rend;
+    SDL_Event event;
+    SDL_Texture* background;
+    SDL_Texture* white;
+    SDL_Texture* black;
+    SDL_Texture* manIcon;
+    SDL_Texture* aiIcon;
+    SDL_Texture* numbers;
+    Game game;
+    std::chrono::steady_clock::time_point begin;
+    std::chrono::steady_clock::time_point end;
+    Display();
 
 public:
-	stack<Game> hist;
-	stack<Game> forward;
-	Display(Game g);
-	~Display();
-	void	refresh();
-	int		run();
-	void	outputMove();
-	void	checkClick();
-	void	checkHist();
-	void	checkHint();
-	void	checkAIMove();
+    stack<Game> hist;
+    stack<Game> forward;
+    Display(Game g);
+    ~Display();
+    void refresh();
+    int run();
+    void outputMove();
+    void printNumber(int num, int x, int y);
+    void updateTime(char color);
+    void    checkClick();
+    void    checkHist();
+    void    checkHint();
+    void    checkAIMove();
+
+    timeFrame whiteTime;
+    timeFrame blackTime;
 };
 
 #endif

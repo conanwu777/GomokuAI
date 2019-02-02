@@ -1,6 +1,7 @@
 #include "Display.hpp"
 #include "Selector.hpp"
 
+
 void	Display::refresh()
 {
 	SDL_Rect rect;
@@ -27,9 +28,45 @@ void	Display::refresh()
 				SDL_RenderCopy(rend, white, NULL, &rect);
 		}
 	}
+	printNumber(whiteTime.min, 10, 300);
+	printNumber(whiteTime.sec, 100, 300);
+	printNumber(whiteTime.milli, 200, 300);
+
+	printNumber(blackTime.min, 1300, 300);
+	printNumber(blackTime.sec, 1400, 300);
+	printNumber(blackTime.milli, 1500, 300);
 	SDL_RenderPresent(rend);
 	if (game.won)
 		cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
+}
+
+	
+
+void Display::updateTime(char color){
+	float time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() / 1000.0;
+	if (color == 'b'){
+		blackTime.min = (int)time / 60;
+		blackTime.sec = (int)time % 60;
+		blackTime.milli = (time - (int)time) * 100;
+	}
+	else{
+		whiteTime.min = (int)time / 60;
+		whiteTime.sec = (int)time % 60;
+		whiteTime.milli = (time - (int)time) * 100;
+	}
+}
+
+void Display::printNumber(int num, int x, int y){
+	while(num >= 100){
+		num /= 10;
+	}
+	SDL_Rect rect = {x, y, 50, 50};
+	SDL_Rect numBox = {0, 0, 50, 50};
+	numBox.x = 50 * (num / 10);
+	SDL_RenderCopy(rend, numbers, &numBox, &rect);
+	rect.x += 50;
+	numBox.x = 50 * (num % 10);
+	SDL_RenderCopy(rend, numbers, &numBox, &rect);
 }
 
 Display::Display() {}
@@ -59,6 +96,18 @@ Display::Display(Game g) : game(g)
 		tmpSurf = SDL_LoadBMP(game.ai == 'b' ? "tex/ai_w.bmp" : "tex/ai_b.bmp");
 	aiIcon = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
+	tmpSurf = SDL_LoadBMP("tex/numbers.bmp");
+	numbers = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
+	whiteTime.milli = 0;
+	whiteTime.sec = 0;
+	whiteTime.min = 0;
+
+	blackTime.milli = 0;
+	blackTime.sec = 0;
+	blackTime.min = 0;
+
+	begin = std::chrono::steady_clock::now();
 }
 
 Display::~Display()
@@ -93,9 +142,13 @@ void		Display::checkClick()
 			cout << "Invalid move\n";
 			hist.pop();
 		}
+		end = std::chrono::steady_clock::now();
+		updateTime(game.turn);
 		outputMove();
+		begin = std::chrono::steady_clock::now();
 	}
 }
+
 
 void		Display::checkHist()
 {
@@ -153,18 +206,22 @@ void	Display::checkAIMove()
 	if (game.ai == game.turn)
 	{
 		hist.push(game);
+		begin = std::chrono::steady_clock::now();
 		if (game.aiMove() == -1)
 		{
 			cout << "Invalid move\n";
 			hist.pop();
 		}
+		end = std::chrono::steady_clock::now();
 		outputMove();
+		updateTime(game.ai == 'b' ? 'w' : 'b');
+		begin = std::chrono::steady_clock::now();
+
 	}
 }
 
 int		Display::run()
 {
-	pos p;
 	if (game.ai == 'b')
 	{
 		game.board[9][9] = 'b';
