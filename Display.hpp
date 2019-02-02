@@ -11,25 +11,29 @@
 
 class Display {
 private:
-    SDL_Window *win;
-    SDL_Renderer *rend;
-    SDL_Event event;
-    SDL_Texture* background;
-    SDL_Texture* white;
-    SDL_Texture* black;
-    SDL_Texture* manIcon;
-    SDL_Texture* aiIcon;
-    Game game;
-    Display();
+	SDL_Window *win;
+	SDL_Renderer *rend;
+	SDL_Event event;
+	SDL_Texture* background;
+	SDL_Texture* white;
+	SDL_Texture* black;
+	SDL_Texture* manIcon;
+	SDL_Texture* aiIcon;
+	Game game;
+	Display();
 
 public:
-    stack<Game> hist;
-    stack<Game> forward;
-    Display(Game g);
-    ~Display();
-    void refresh();
-    int run();
-    void outputMove();
+	stack<Game> hist;
+	stack<Game> forward;
+	Display(Game g);
+	~Display();
+	void	refresh();
+	int		run();
+	void	outputMove();
+	void	checkClick();
+	void	checkHist();
+	void	checkHint();
+	void	checkAIMove();
 };
 
 #endif

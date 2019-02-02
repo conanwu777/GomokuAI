@@ -78,6 +78,90 @@ void Display::outputMove()
 	refresh();
 }
 
+void		Display::checkClick()
+{
+	if (event.type == SDL_MOUSEBUTTONDOWN)
+	{
+		pos p;
+		p.x = (event.motion.x - 325) / 50.0;
+		p.y = (event.motion.y - 25) / 50.0;
+		hist.push(game);
+		while (forward.size())
+			forward.pop();
+		if (game.move(p) == -1)
+		{
+			cout << "Invalid move\n";
+			hist.pop();
+		}
+		outputMove();
+	}
+}
+
+void		Display::checkHist()
+{
+	if (event.type != SDL_KEYUP)
+		return ;
+	if (event.key.keysym.sym == SDLK_LEFT && hist.size())
+	{
+		forward.push(game);
+		game = hist.top();
+		hist.pop();
+		while (hist.size() && game.turn == game.ai)
+		{
+			forward.push(game);
+			game = hist.top();
+			hist.pop();
+		}
+		refresh();
+	}
+	if (event.key.keysym.sym == SDLK_RIGHT && forward.size())
+	{
+		hist.push(game);
+		game = forward.top();
+		forward.pop();
+		while (forward.size() && game.turn == game.ai)
+		{
+			hist.push(game);
+			game = forward.top();
+			forward.pop();
+		}
+		refresh();
+	}
+}
+
+void	Display::checkHint()
+{
+	if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
+	{
+		hist.push(game);
+		game.ai = game.turn;
+		if (game.aiMove() == -1)
+		{
+			cout << "Invalid move\n";
+			hist.pop();
+		}
+		refresh();
+		usleep(500000);
+		game = hist.top();
+		hist.pop();
+		refresh();
+	}
+}
+
+void	Display::checkAIMove()
+{
+	if (game.ai == game.turn)
+	{
+		hist.push(game);
+		if (game.aiMove() == -1)
+		{
+			cout << "Invalid move\n";
+			hist.pop();
+		}
+		outputMove();
+	}
+}
+
 int		Display::run()
 {
 	pos p;
@@ -94,71 +178,10 @@ int		Display::run()
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
 				exit (1);
-			else if (event.type == SDL_MOUSEBUTTONDOWN)
-			{
-				p.x = (event.motion.x - 325) / 50.0;
-				p.y = (event.motion.y - 25) / 50.0;
-				hist.push(game);
-				while (forward.size())
-					forward.pop();
-				if (game.move(p) == -1)
-				{
-					cout << "Invalid move\n";
-					hist.pop();
-				}
-				outputMove();
-			}
-			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_LEFT && hist.size())
-			{
-				forward.push(game);
-				game = hist.top();
-				hist.pop();
-				while (hist.size() && game.turn == game.ai)
-				{
-					forward.push(game);
-					game = hist.top();
-					hist.pop();
-				}
-				refresh();
-			}
-			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_RIGHT && forward.size())
-			{
-				hist.push(game);
-				game = forward.top();
-				forward.pop();
-				while (forward.size() && game.turn == game.ai)
-				{
-					hist.push(game);
-					game = forward.top();
-					forward.pop();
-				}
-				refresh();
-			}
-			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
-			{
-				hist.push(game);
-				game.ai = game.turn;
-				if (game.aiMove() == -1)
-				{
-					cout << "Invalid move\n";
-					hist.pop();
-				}
-				refresh();
-				usleep(500000);
-				game = hist.top();
-				hist.pop();
-				refresh();
-			}
+			checkClick();
+			checkHist();
+			checkHint();
 		}
-		if (game.ai == game.turn)
-		{
-			hist.push(game);
-			if (game.aiMove() == -1)
-			{
-				cout << "Invalid move\n";
-				hist.pop();
-			}
-			outputMove();
-		}
+		checkAIMove();
 	}
 }
