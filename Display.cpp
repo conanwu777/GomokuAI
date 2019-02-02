@@ -26,7 +26,8 @@ void	Display::refresh()
 
 Display::Display() {}
 
-Display::Display(Game g) : game(g) {
+Display::Display(Game g) : game(g)
+{
 	SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("Gomoku", SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
@@ -43,9 +44,21 @@ Display::Display(Game g) : game(g) {
 	SDL_FreeSurface(tmpSurf);
 }
 
-Display::~Display(){
+Display::~Display()
+{
 	SDL_DestroyWindow(win);
 	SDL_DestroyRenderer(rend);
+}
+
+void Display::outputMove()
+{
+	cout << "Free 4 : " << game.comp[0] << ", " << game.comp[1] << endl;
+	cout << "Half-open 4 : " << game.comp[2] << ", " << game.comp[3] << endl;
+	cout << "Free 3 : " << game.comp[4] << ", " << game.comp[5] << endl;
+	cout << "Half-open 3 / Free 2 : " << game.comp[6] << ", " << game.comp[7] << endl;
+	cout << "Capture : " << game.cap_b << ", " << game.cap_w << endl;
+	cout << "Player : " << game.score << endl;
+	refresh();
 }
 
 int		Display::run()
@@ -56,11 +69,13 @@ int		Display::run()
 		game.board[9][9] = 'b';
 		game.turn = 'w';
 	}
+	refresh();
 	while (1)
 	{
 		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
+			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
+				&& event.key.keysym.sym == SDLK_ESCAPE))
 				exit (1);
 			else if (event.type == SDL_MOUSEBUTTONDOWN)
 			{
@@ -74,11 +89,7 @@ int		Display::run()
 					cout << "Invalid move\n";
 					hist.pop();
 				}
-				cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
-				cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-				cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
-				cout << "1000 * " << game.comp[6] << ", " << game.comp[7] << endl;
-				cout << "Player : " << game.score << endl;
+				outputMove();
 			}
 			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_LEFT && hist.size())
 			{
@@ -91,6 +102,7 @@ int		Display::run()
 					game = hist.top();
 					hist.pop();
 				}
+				refresh();
 			}
 			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_RIGHT && forward.size())
 			{
@@ -103,9 +115,24 @@ int		Display::run()
 					game = forward.top();
 					forward.pop();
 				}
+				refresh();
+			}
+			if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
+			{
+				hist.push(game);
+				game.ai = game.turn;
+				if (game.aiMove() == -1)
+				{
+					cout << "Invalid move\n";
+					hist.pop();
+				}
+				refresh();
+				usleep(500000);
+				game = hist.top();
+				hist.pop();
+				refresh();
 			}
 		}
-		refresh();
 		if (game.ai == game.turn)
 		{
 			hist.push(game);
@@ -114,12 +141,7 @@ int		Display::run()
 				cout << "Invalid move\n";
 				hist.pop();
 			}
-			cout << "1000000 * " << game.comp[0] << ", " << game.comp[1] << endl;
-			cout << "100000 * " << game.comp[2] << ", " << game.comp[3] << endl;
-			cout << "10000 * " << game.comp[4] << ", " << game.comp[5] << endl;
-			cout << "1000 * " << game.comp[6] << ", " << game.comp[7] << endl;
-			cout << "AI : " << game.score << endl;
-			refresh();
+			outputMove();
 		}
 	}
 }

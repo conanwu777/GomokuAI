@@ -78,20 +78,17 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 		{
 			if ((open && curBlock == 4) || (prevBlock && curBlock &&
 				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
-			{
-cout << "1 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
-cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
-			}
 			else if ((open && curBlock == 3) || (prevBlock && curBlock &&
 				curBlock + prevBlock == 3 && curPlayer == prevPlayer))
 				comp[(curPlayer == 'b' ? 6 : 7)]++;
 			open = true;
 			if (first || board[sty - incy][stx - incx])
 				open = false;
+			if (curPlayer != board[sty][stx])
+				prevBlock = 0;
 			curBlock = 1;
 			curPlayer = board[sty][stx];
-			prevBlock = 0;
 		}
 		else
 		{
@@ -99,11 +96,7 @@ cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 0 : 1)]++;
 			else if (curBlock == 4 || (prevBlock && curBlock &&
 				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
-			{
-cout << "2 half-open 4 : " << stx << ", " << sty << " | " << incx << ", " << incy << endl;
-cout << "blocks : " << curBlock << " , " << prevBlock << endl;
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
-			}
 			else if (open && (curBlock == 3 || (prevBlock && curBlock &&
 				curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;

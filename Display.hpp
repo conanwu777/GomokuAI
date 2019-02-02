@@ -26,8 +26,8 @@ public:
     Display(Game g);
     ~Display();
     void refresh();
-    void SDL_Start();
     int run();
+    void outputMove();
 };
 
 #endif
