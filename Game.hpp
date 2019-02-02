@@ -10,7 +10,8 @@ public:
 	int comp[8];
 	int alpha;
     int beta;
-	char ai;
+	bool b;
+	bool w;
 	char turn;
 	char won;
 	int score;
@@ -18,6 +19,7 @@ public:
 	int cap_w;
 	char board[19][19];
 	Game();
+	Game(bool b, bool w);
 	Game(const Game &g);
 	Game& operator=(const Game &g);
 	~Game();

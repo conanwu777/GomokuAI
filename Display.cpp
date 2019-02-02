@@ -10,10 +10,10 @@ void	Display::refresh()
 	rect.h = 300;
 	rect.x = 0;
 	rect.y = 0;
-	SDL_RenderCopy(rend, game.ai == 'b' ? aiIcon : manIcon, NULL, &rect);
+	SDL_RenderCopy(rend, left, NULL, &rect);
 	rect.x = 1300;
 	rect.y = 0;
-	SDL_RenderCopy(rend, game.ai == 'b' ? manIcon : aiIcon, NULL, &rect);
+	SDL_RenderCopy(rend, right, NULL, &rect);
 	rect.w = 50;
 	rect.h = 50;
 	for (int i = 0; i < 19; i++)
@@ -28,45 +28,47 @@ void	Display::refresh()
 				SDL_RenderCopy(rend, white, NULL, &rect);
 		}
 	}
-	printNumber(whiteTime.min, 10, 300);
-	printNumber(whiteTime.sec, 100, 300);
-	printNumber(whiteTime.milli, 200, 300);
+	printNumber(whiteTime.min, 10, 300, 1);
+	printNumber(whiteTime.sec, 100, 300, 1);
+	printNumber(whiteTime.milli, 200, 300, 1);
 
-	printNumber(blackTime.min, 1300, 300);
-	printNumber(blackTime.sec, 1400, 300);
-	printNumber(blackTime.milli, 1500, 300);
+	printNumber(blackTime.min, 1300, 300, 0);
+	printNumber(blackTime.sec, 1400, 300, 0);
+	printNumber(blackTime.milli, 1500, 300, 0);
+
 	SDL_RenderPresent(rend);
 	if (game.won)
 		cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
 }
 
-	
-
 void Display::updateTime(char color){
-	float time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() / 1000.0;
-	if (color == 'b'){
+	float time = std::chrono::duration_cast<std::chrono::milliseconds>
+	(end - begin).count() / 1000.0;
+	if (color == 'b')
+	{
 		blackTime.min = (int)time / 60;
 		blackTime.sec = (int)time % 60;
 		blackTime.milli = (time - (int)time) * 100;
 	}
-	else{
+	else
+	{
 		whiteTime.min = (int)time / 60;
 		whiteTime.sec = (int)time % 60;
 		whiteTime.milli = (time - (int)time) * 100;
 	}
 }
 
-void Display::printNumber(int num, int x, int y){
+void Display::printNumber(int num, int x, int y, bool b){
 	while(num >= 100){
 		num /= 10;
 	}
 	SDL_Rect rect = {x, y, 50, 50};
 	SDL_Rect numBox = {0, 0, 50, 50};
 	numBox.x = 50 * (num / 10);
-	SDL_RenderCopy(rend, numbers, &numBox, &rect);
+	SDL_RenderCopy(rend, (b ? num_w : num_b), &numBox, &rect);
 	rect.x += 50;
 	numBox.x = 50 * (num % 10);
-	SDL_RenderCopy(rend, numbers, &numBox, &rect);
+	SDL_RenderCopy(rend, (b ? num_w : num_b), &numBox, &rect);
 }
 
 Display::Display() {}
@@ -87,17 +89,17 @@ Display::Display(Game g) : game(g)
 	tmpSurf = SDL_LoadBMP("tex/black.bmp");
 	black = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP(game.ai == 'b' ? "tex/man_b.bmp" : "tex/man_w.bmp");
-	manIcon = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	tmpSurf = SDL_LoadBMP(game.b ? "tex/ai_w.bmp" : "tex/man_w.bmp");
+	left = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	if (!game.ai)
-		tmpSurf = SDL_LoadBMP("tex/man_b.bmp");
-	else
-		tmpSurf = SDL_LoadBMP(game.ai == 'b' ? "tex/ai_w.bmp" : "tex/ai_b.bmp");
-	aiIcon = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	tmpSurf = SDL_LoadBMP(game.w ? "tex/ai_b.bmp" : "tex/man_b.bmp");
+	right = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP("tex/numbers.bmp");
-	numbers = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	tmpSurf = SDL_LoadBMP("tex/nums_b.bmp");
+	num_b = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
+	tmpSurf = SDL_LoadBMP("tex/nums_w.bmp");
+	num_w = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
 	whiteTime.milli = 0;
 	whiteTime.sec = 0;
@@ -106,8 +108,6 @@ Display::Display(Game g) : game(g)
 	blackTime.milli = 0;
 	blackTime.sec = 0;
 	blackTime.min = 0;
-
-	begin = std::chrono::steady_clock::now();
 }
 
 Display::~Display()
@@ -142,13 +142,18 @@ void		Display::checkClick()
 			cout << "Invalid move\n";
 			hist.pop();
 		}
-		end = std::chrono::steady_clock::now();
-		updateTime(game.turn);
 		outputMove();
-		begin = std::chrono::steady_clock::now();
 	}
 }
 
+bool		Display::isAITurn()
+{
+	if (game.turn == 'b' && game.b)
+		return true;
+	if (game.turn == 'w' && game.w)
+		return true;
+	return false;
+}
 
 void		Display::checkHist()
 {
@@ -159,7 +164,7 @@ void		Display::checkHist()
 		forward.push(game);
 		game = hist.top();
 		hist.pop();
-		while (hist.size() && game.turn == game.ai)
+		while (hist.size() && isAITurn())
 		{
 			forward.push(game);
 			game = hist.top();
@@ -172,7 +177,7 @@ void		Display::checkHist()
 		hist.push(game);
 		game = forward.top();
 		forward.pop();
-		while (forward.size() && game.turn == game.ai)
+		while (forward.size() && isAITurn())
 		{
 			hist.push(game);
 			game = forward.top();
@@ -187,7 +192,8 @@ void	Display::checkHint()
 	if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
 	{
 		hist.push(game);
-		game.ai = game.turn;
+		game.b = true;
+		game.w = true;
 		if (game.aiMove() == -1)
 		{
 			cout << "Invalid move\n";
@@ -203,26 +209,18 @@ void	Display::checkHint()
 
 void	Display::checkAIMove()
 {
-	if (game.ai == game.turn)
+	hist.push(game);
+	if (game.aiMove() == -1)
 	{
-		hist.push(game);
-		begin = std::chrono::steady_clock::now();
-		if (game.aiMove() == -1)
-		{
-			cout << "Invalid move\n";
-			hist.pop();
-		}
-		end = std::chrono::steady_clock::now();
-		outputMove();
-		updateTime(game.ai == 'b' ? 'w' : 'b');
-		begin = std::chrono::steady_clock::now();
-
+		cout << "Invalid move\n";
+		hist.pop();
 	}
+	outputMove();
 }
 
 int		Display::run()
 {
-	if (game.ai == 'b')
+	if (game.b)
 	{
 		game.board[9][9] = 'b';
 		game.turn = 'w';
@@ -230,7 +228,8 @@ int		Display::run()
 	refresh();
 	while (1)
 	{
-		while (SDL_PollEvent(&event))
+		begin = std::chrono::steady_clock::now();
+		while (!isAITurn() && SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
@@ -239,6 +238,14 @@ int		Display::run()
 			checkHist();
 			checkHint();
 		}
-		checkAIMove();
+		end = std::chrono::steady_clock::now();
+		updateTime(game.turn);
+		if (isAITurn())
+		{
+			begin = std::chrono::steady_clock::now();
+			checkAIMove();
+			end = std::chrono::steady_clock::now();
+			updateTime(game.turn);
+		}
 	}
 }

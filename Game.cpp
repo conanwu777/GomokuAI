@@ -30,7 +30,15 @@ bool Game::adjacent(pos p) const
 }
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0)
+alpha(INT_MIN), beta(INT_MAX), score(0), b(false), w(false)
+{
+	for (int i = 0; i < 19; i++)
+		for (int j = 0; j < 19; j++)
+			board[i][j] = 0;
+}
+
+Game::Game(bool b, bool w) : turn('b'), won(0), cap_b(0), cap_w(0),
+alpha(INT_MIN), beta(INT_MAX), score(0), b(b), w(w)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -41,7 +49,8 @@ Game& Game::operator=(const Game &g)
 {
 	alpha = g.alpha;
 	beta = g.beta;
-	ai = g.ai;
+	b = g.b;
+	w = g.w;
 	turn = g.turn;
 	won = g.won;
 	score = g.score;

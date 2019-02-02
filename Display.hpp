@@ -23,9 +23,10 @@ private:
     SDL_Texture* background;
     SDL_Texture* white;
     SDL_Texture* black;
-    SDL_Texture* manIcon;
-    SDL_Texture* aiIcon;
-    SDL_Texture* numbers;
+    SDL_Texture* left;
+    SDL_Texture* right;
+    SDL_Texture* num_b;
+    SDL_Texture* num_w;
     Game game;
     std::chrono::steady_clock::time_point begin;
     std::chrono::steady_clock::time_point end;
@@ -39,12 +40,13 @@ public:
     void refresh();
     int run();
     void outputMove();
-    void printNumber(int num, int x, int y);
+    void printNumber(int num, int x, int y, bool b);
     void updateTime(char color);
     void    checkClick();
     void    checkHist();
     void    checkHint();
     void    checkAIMove();
+    bool    isAITurn();
 
     timeFrame whiteTime;
     timeFrame blackTime;
