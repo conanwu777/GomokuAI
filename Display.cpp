@@ -3,16 +3,24 @@
 
 void	Display::refresh()
 {
-	SDL_RenderCopy(rend, background, NULL, NULL);
 	SDL_Rect rect;
-	rect.w = W / 19;
-	rect.h = H / 19;
+	SDL_RenderCopy(rend, background, NULL, NULL);
+	rect.w = 300;
+	rect.h = 300;
+	rect.x = 0;
+	rect.y = 0;
+	SDL_RenderCopy(rend, game.ai == 'b' ? aiIcon : manIcon, NULL, &rect);
+	rect.x = 1300;
+	rect.y = 0;
+	SDL_RenderCopy(rend, game.ai == 'b' ? manIcon : aiIcon, NULL, &rect);
+	rect.w = 50;
+	rect.h = 50;
 	for (int i = 0; i < 19; i++)
 	{
-		rect.y = i * rect.h;
+		rect.y = i * rect.h + 25;
 		for (int j = 0; j < 19; j++)
 		{
-			rect.x = j * rect.w;
+			rect.x = j * rect.w + 325;
 			if (game.board[i][j] == 'b')
 				SDL_RenderCopy(rend, black, NULL, &rect);
 			else if (game.board[i][j] == 'w')
@@ -33,7 +41,7 @@ Display::Display(Game g) : game(g)
 		SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
 	rend = SDL_CreateRenderer(win, -1, 0);
 	SDL_Surface *tmpSurf;
-	tmpSurf = SDL_LoadBMP("tex/background.bmp");
+	tmpSurf = SDL_LoadBMP("tex/board.bmp");
 	background = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
 	tmpSurf = SDL_LoadBMP("tex/white.bmp");
@@ -41,6 +49,15 @@ Display::Display(Game g) : game(g)
 	SDL_FreeSurface(tmpSurf);
 	tmpSurf = SDL_LoadBMP("tex/black.bmp");
 	black = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
+	tmpSurf = SDL_LoadBMP(game.ai == 'b' ? "tex/man_b.bmp" : "tex/man_w.bmp");
+	manIcon = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
+	if (!game.ai)
+		tmpSurf = SDL_LoadBMP("tex/man_b.bmp");
+	else
+		tmpSurf = SDL_LoadBMP(game.ai == 'b' ? "tex/ai_w.bmp" : "tex/ai_b.bmp");
+	aiIcon = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
 }
 
@@ -79,8 +96,8 @@ int		Display::run()
 				exit (1);
 			else if (event.type == SDL_MOUSEBUTTONDOWN)
 			{
-				p.x = event.motion.x * 19.0 / float(W);
-				p.y = event.motion.y * 19.0 / float(H);
+				p.x = (event.motion.x - 325) / 50.0;
+				p.y = (event.motion.y - 25) / 50.0;
 				hist.push(game);
 				while (forward.size())
 					forward.pop();

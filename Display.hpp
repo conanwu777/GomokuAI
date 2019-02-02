@@ -6,8 +6,8 @@
 # include <stack>
 # include <SDL2/SDL.h>
 
-# define W 1200
-# define H 1200
+# define W 1600
+# define H 1000
 
 class Display {
 private:
@@ -17,6 +17,8 @@ private:
     SDL_Texture* background;
     SDL_Texture* white;
     SDL_Texture* black;
+    SDL_Texture* manIcon;
+    SDL_Texture* aiIcon;
     Game game;
     Display();
 
