@@ -5,7 +5,7 @@
 # include <ctime>
 # include <unistd.h>
 
-# define MAX_DEPTH 4
+# define MAX_DEPTH 5
 
 using namespace std;
 

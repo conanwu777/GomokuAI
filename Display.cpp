@@ -1,7 +1,6 @@
 #include "Display.hpp"
 #include "Selector.hpp"
 
-
 void	Display::refresh()
 {
 	SDL_Rect rect;
@@ -12,7 +11,7 @@ void	Display::refresh()
 	rect.y = 0;
 	SDL_RenderCopy(rend, left, NULL, &rect);
 	rect.x = 1300;
-	rect.y = 0;
+	rect.y = 575;
 	SDL_RenderCopy(rend, right, NULL, &rect);
 	rect.w = 50;
 	rect.h = 50;
@@ -28,13 +27,23 @@ void	Display::refresh()
 				SDL_RenderCopy(rend, white, NULL, &rect);
 		}
 	}
-	printNumber(whiteTime.min, 10, 300, 1);
-	printNumber(whiteTime.sec, 100, 300, 1);
-	printNumber(whiteTime.milli, 200, 300, 1);
 
-	printNumber(blackTime.min, 1300, 300, 0);
-	printNumber(blackTime.sec, 1400, 300, 0);
-	printNumber(blackTime.milli, 1500, 300, 0);
+	capturedPieces();
+	printNumber(blackTime.min, 84, 335, 0, 0.7);
+	printNumber(blackTime.sec, 134, 335, 0, 0.7);
+	printNumber(blackTime.milli, 185, 335, 0, 0.7);
+
+	printNumber(whiteTime.min, 1384, 910, 1, 0.7);
+	printNumber(whiteTime.sec, 1434, 910, 1, 0.7);
+	printNumber(whiteTime.milli, 1485, 910, 1, 0.7);
+
+	printNumber(blackTotalTime.min, 55, 275, 0, 1);
+	printNumber(blackTotalTime.sec, 126, 275, 0, 1);
+	printNumber(blackTotalTime.milli, 197, 275, 0, 1);
+
+	printNumber(whiteTotalTime.min, 1355, 850, 1, 1);
+	printNumber(whiteTotalTime.sec, 1426, 850, 1, 1);
+	printNumber(whiteTotalTime.milli, 1497, 850, 1, 1);
 
 	SDL_RenderPresent(rend);
 	if (game.won)
@@ -44,34 +53,87 @@ void	Display::refresh()
 void Display::updateTime(char color){
 	float time = std::chrono::duration_cast<std::chrono::milliseconds>
 	(end - begin).count() / 1000.0;
+cout << time << endl;
 	if (color == 'b')
 	{
 		blackTime.min = (int)time / 60;
 		blackTime.sec = (int)time % 60;
 		blackTime.milli = (time - (int)time) * 100;
+		blackTotalTime.min += blackTime.min;
+		blackTotalTime.sec += blackTime.sec;
+		blackTotalTime.milli += blackTime.milli;
+
+		if(blackTotalTime.milli >= 100){
+			blackTotalTime.sec++;
+			blackTotalTime.milli -= 100;
+		}
+		if(blackTotalTime.sec >= 60){
+			blackTotalTime.min++;
+			blackTotalTime.sec -= 60;
+		}
 	}
 	else
 	{
 		whiteTime.min = (int)time / 60;
 		whiteTime.sec = (int)time % 60;
 		whiteTime.milli = (time - (int)time) * 100;
+		whiteTotalTime.min += whiteTime.min;
+		whiteTotalTime.sec += whiteTime.sec;
+		whiteTotalTime.milli += whiteTime.milli;
+
+		if(whiteTotalTime.milli >= 100){
+			whiteTotalTime.sec++;
+			whiteTotalTime.milli -= 100;
+		}
+		if(whiteTotalTime.sec >= 60){
+			whiteTotalTime.min++;
+			whiteTotalTime.sec -= 60;
+		}
 	}
 }
 
-void Display::printNumber(int num, int x, int y, bool b){
+void Display::printNumber(int num, int x, int y, bool b, float scale){
 	while(num >= 100){
 		num /= 10;
 	}
-	SDL_Rect rect = {x, y, 50, 50};
-	SDL_Rect numBox = {0, 0, 50, 50};
-	numBox.x = 50 * (num / 10);
+	SDL_Rect rect = {x, y, (int)(24 * scale), (int)(40 * scale)};
+	SDL_Rect numBox = {0, 0, 30, 50};
+	numBox.x = 30 * (num / 10);
 	SDL_RenderCopy(rend, (b ? num_w : num_b), &numBox, &rect);
-	rect.x += 50;
-	numBox.x = 50 * (num % 10);
+	rect.x += (int)(24 * scale);
+	numBox.x = 30 * (num % 10);
 	SDL_RenderCopy(rend, (b ? num_w : num_b), &numBox, &rect);
 }
 
 Display::Display() {}
+
+void    Display::capturedPieces()
+{
+    SDL_Rect rect;
+
+    rect.w = 50;
+    rect.h = 50;
+    rect.y = H - 100;
+    for (int i = 0; i < game.cap_b; i++)
+    {
+        rect.x = 175;
+        SDL_RenderCopy(rend, white, NULL, &rect);
+        rect.x += 50;
+        rect.y -= 25;
+        SDL_RenderCopy(rend, white, NULL, &rect);
+        rect.y -= 50;
+    }
+    rect.y = 50;
+    for (int i = 0; i < game.cap_w; i++)
+    {
+        rect.x = 1375;
+        SDL_RenderCopy(rend, black, NULL, &rect);
+        rect.x -= 50;
+        rect.y += 25;
+        SDL_RenderCopy(rend, black, NULL, &rect);
+        rect.y += 50;
+    }
+}
 
 Display::Display(Game g) : game(g)
 {
@@ -89,10 +151,10 @@ Display::Display(Game g) : game(g)
 	tmpSurf = SDL_LoadBMP("tex/black.bmp");
 	black = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP(game.b ? "tex/ai_w.bmp" : "tex/man_w.bmp");
+	tmpSurf = SDL_LoadBMP(game.b ? "tex/ai_b.bmp" : "tex/man_b.bmp");
 	left = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP(game.w ? "tex/ai_b.bmp" : "tex/man_b.bmp");
+	tmpSurf = SDL_LoadBMP(game.w ? "tex/ai_w.bmp" : "tex/man_w.bmp");
 	right = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
 	tmpSurf = SDL_LoadBMP("tex/nums_b.bmp");
@@ -108,6 +170,15 @@ Display::Display(Game g) : game(g)
 	blackTime.milli = 0;
 	blackTime.sec = 0;
 	blackTime.min = 0;
+
+	whiteTotalTime.milli = 0;
+	whiteTotalTime.sec = 0;
+	whiteTotalTime.min = 0;
+
+	blackTotalTime.milli = 0;
+	blackTotalTime.sec = 0;
+	blackTotalTime.min = 0;
+	begin = std::chrono::steady_clock::now();
 }
 
 Display::~Display()
@@ -143,6 +214,11 @@ void		Display::checkClick()
 			hist.pop();
 		}
 		outputMove();
+		end = std::chrono::steady_clock::now();
+		updateTime(game.turn);
+		begin = std::chrono::steady_clock::now();
+		if (game.won)
+			exit(0);
 	}
 }
 
@@ -218,7 +294,7 @@ void	Display::checkAIMove()
 	outputMove();
 }
 
-int		Display::run()
+void		Display::run()
 {
 	if (game.b)
 	{
@@ -228,8 +304,7 @@ int		Display::run()
 	refresh();
 	while (1)
 	{
-		begin = std::chrono::steady_clock::now();
-		while (!isAITurn() && SDL_PollEvent(&event))
+		if (!isAITurn() && SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
@@ -238,14 +313,14 @@ int		Display::run()
 			checkHist();
 			checkHint();
 		}
-		end = std::chrono::steady_clock::now();
-		updateTime(game.turn);
 		if (isAITurn())
 		{
 			begin = std::chrono::steady_clock::now();
 			checkAIMove();
 			end = std::chrono::steady_clock::now();
 			updateTime(game.turn);
+			if (game.won)
+				break;
 		}
 	}
 }

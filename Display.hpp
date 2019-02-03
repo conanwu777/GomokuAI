@@ -38,18 +38,21 @@ public:
     Display(Game g);
     ~Display();
     void refresh();
-    int run();
+    void run();
     void outputMove();
-    void printNumber(int num, int x, int y, bool b);
+    void printNumber(int num, int x, int y, bool b, float scale);
     void updateTime(char color);
     void    checkClick();
     void    checkHist();
     void    checkHint();
     void    checkAIMove();
+    void    capturedPieces();
     bool    isAITurn();
 
     timeFrame whiteTime;
     timeFrame blackTime;
+    timeFrame whiteTotalTime;
+    timeFrame blackTotalTime;
 };
 
 #endif

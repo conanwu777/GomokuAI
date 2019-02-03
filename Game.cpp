@@ -280,9 +280,9 @@ void Game::getScore()
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
 	ret += 1000 * comp[6] - 1000 * comp[7];
 	if (cap_b)
-		ret += 10000 + 4000 * (cap_b * cap_b);
+		ret += 20000 + 4000 * (cap_b * cap_b);
 	if (cap_w)
-		ret -= 10000 + 4000 * (cap_w * cap_w);
+		ret -= 20000 + 4000 * (cap_w * cap_w);
 	score = ret;
 }
 
