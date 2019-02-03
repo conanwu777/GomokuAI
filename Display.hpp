@@ -28,8 +28,8 @@ private:
     SDL_Texture* num_b;
     SDL_Texture* num_w;
     Game game;
-    std::chrono::steady_clock::time_point begin;
-    std::chrono::steady_clock::time_point end;
+    chrono::steady_clock::time_point begin;
+    chrono::steady_clock::time_point end;
     Display();
 
 public:

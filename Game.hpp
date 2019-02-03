@@ -17,6 +17,7 @@ public:
 	int score;
 	int cap_b;
 	int cap_w;
+	float mult;
 	char board[19][19];
 	Game();
 	Game(bool b, bool w);

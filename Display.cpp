@@ -53,7 +53,6 @@ void	Display::refresh()
 void Display::updateTime(char color){
 	float time = std::chrono::duration_cast<std::chrono::milliseconds>
 	(end - begin).count() / 1000.0;
-cout << time << endl;
 	if (color == 'b')
 	{
 		blackTime.min = (int)time / 60;
@@ -63,11 +62,13 @@ cout << time << endl;
 		blackTotalTime.sec += blackTime.sec;
 		blackTotalTime.milli += blackTime.milli;
 
-		if(blackTotalTime.milli >= 100){
+		if (blackTotalTime.milli >= 100)
+		{
 			blackTotalTime.sec++;
 			blackTotalTime.milli -= 100;
 		}
-		if(blackTotalTime.sec >= 60){
+		if (blackTotalTime.sec >= 60)
+		{
 			blackTotalTime.min++;
 			blackTotalTime.sec -= 60;
 		}
@@ -189,17 +190,19 @@ Display::~Display()
 
 void Display::outputMove()
 {
-	cout << "Free 4 : " << game.comp[0] << ", " << game.comp[1] << endl;
-	cout << "Half-open 4 : " << game.comp[2] << ", " << game.comp[3] << endl;
-	cout << "Free 3 : " << game.comp[4] << ", " << game.comp[5] << endl;
-	cout << "Half-open 3 / Free 2 : " << game.comp[6] << ", " << game.comp[7] << endl;
-	cout << "Capture : " << game.cap_b << ", " << game.cap_w << endl;
-	cout << "Player : " << game.score << endl;
+	// cout << "Free 4 : " << game.comp[0] << ", " << game.comp[1] << endl;
+	// cout << "Half-open 4 : " << game.comp[2] << ", " << game.comp[3] << endl;
+	// cout << "Free 3 : " << game.comp[4] << ", " << game.comp[5] << endl;
+	// cout << "Half-open 3 / Free 2 : " << game.comp[6] << ", " << game.comp[7] << endl;
+	// cout << "Capture : " << game.cap_b << ", " << game.cap_w << endl;
+	// cout << "Player : " << game.score << endl;
 	refresh();
+
 }
 
 void		Display::checkClick()
 {
+	static bool first = true;
 	if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
 		pos p;
@@ -208,15 +211,33 @@ void		Display::checkClick()
 		hist.push(game);
 		while (forward.size())
 			forward.pop();
+		if (!first)
+			Selector::rankPlayerMoves(*this, game);
 		if (game.move(p) == -1)
 		{
 			cout << "Invalid move\n";
 			hist.pop();
+			return ;
 		}
-		outputMove();
 		end = std::chrono::steady_clock::now();
 		updateTime(game.turn);
+		outputMove();
 		begin = std::chrono::steady_clock::now();
+		if (first)
+		{
+			first = false;
+			return ;
+		}
+		Move m = Selector::createMove(hist.top(), game, p);
+		Move a = *Selector::playerMoves.begin();
+		if (!(a.p == p))
+		{
+			if (a.isCapture && !m.isCapture)
+				game.mult *= 0.8;
+			else if (!a.isCapture && m.isCapture)
+				game.mult /= 0.8;
+			cout << "mult : " << game.mult << endl;
+		}
 		if (game.won)
 			exit(0);
 	}
@@ -306,6 +327,8 @@ void		Display::run()
 	{
 		if (!isAITurn() && SDL_PollEvent(&event))
 		{
+//this should be in a separate thread
+
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
 				exit (1);

@@ -3,20 +3,48 @@
 pos Selector::killerAlpha[10];
 pos Selector::killerBeta[10];
 pos Selector::nxMove;
+vector<Move> Selector::playerMoves;
 
-int Selector::bestMove(Game &g, char c)
+bool compareMove(Move &m1, Move &m2) 
 {
-	pos it;
+	if (m1.turn == 'b')
+		return m1.score >= m2.score;
+	else
+		return m1.score < m2.score;
+}
 
-	for (it.y = 0; it.y < 19; it.y++)
-		for (it.x = 0; it.x < 19; it.x++)
-			if (!g.board[it.y][it.x])
-			{
-				Selector::nxMove = it;
-				g.move(it);
-				return g.score;
-			}
-	return 0;
+Move Selector::createMove(Game &g, Game &t, pos p)
+{
+	Move m;
+
+	m.p = p;
+	m.score = t.score;
+	m.turn = g.turn;
+	m.isCapture = (t.cap_b > g.cap_b || t.cap_w > g.cap_w);
+	m.isThree = (t.comp[4] > g.comp[4] || t.comp[5] > g.comp[5]);
+	m.isFour = (t.comp[2] > g.comp[2] || t.comp[3] > g.comp[3]);
+	return m;
+}
+
+int Selector::rankPlayerMoves(Display &d, Game &g)
+{
+	if (d.isAITurn())
+		return 0;
+	Selector::playerMoves.clear();
+	pos p;
+	for (p.y = 0; p.y < 19; p.y++)
+		for (p.x = 0; p.x < 19; p.x++)
+		{
+			if (g.board[p.y][p.x] || !g.adjacent(p))
+				continue ;
+			Game t = g;
+			if (t.move(p) == -1)
+				continue ;
+
+			Selector::playerMoves.push_back(Selector::createMove(g, t, p));
+		}
+	sort(Selector::playerMoves.begin(), Selector::playerMoves.end(), compareMove);
+	return 1;
 }
 
 bool	Selector::tryMove(Game &g, int depth, char c, pos test,
