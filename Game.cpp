@@ -30,7 +30,7 @@ bool Game::adjacent(pos p) const
 }
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0), b(false), w(false), mult(1)
+alpha(INT_MIN), beta(INT_MAX), score(0), b(false), w(false), mult(1) , trueWon(0)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -38,7 +38,7 @@ alpha(INT_MIN), beta(INT_MAX), score(0), b(false), w(false), mult(1)
 }
 
 Game::Game(bool b, bool w) : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0), b(b), w(w), mult(1)
+alpha(INT_MIN), beta(INT_MAX), score(0), b(b), w(w), mult(1), trueWon(0)
 {
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
@@ -47,6 +47,7 @@ alpha(INT_MIN), beta(INT_MAX), score(0), b(b), w(w), mult(1)
 
 Game& Game::operator=(const Game &g)
 {
+	trueWon = g.trueWon;
 	alpha = g.alpha;
 	beta = g.beta;
 	b = g.b;
@@ -192,7 +193,7 @@ bool Game::checkCapture(pos p)
 		c++;
 	(turn == 'b' ? cap_b : cap_w) += c;
 	if ((turn == 'b' ? cap_b : cap_w) >= 5)
-		won = turn;
+		trueWon = turn;
 	return c != 0;
 }
 
@@ -257,13 +258,14 @@ bool Game::checkValid(pos p)
 
 void Game::getScore()
 {
-	if (won)
+	if (trueWon)
 	{
-		if (cap_b >= 5 || cap_w >= 5)
-			score = (won == 'b' ? 2000000000 : -2000000000);
-		else
-			score = (won == 'b' ? 1000000000 : -1000000000);
+		score = (won == 'b' ? 2000000000 : -2000000000);
 		return ;
+	}
+	else if (won){
+		score = (won == 'b' ? 1000000000 : -1000000000);
+		return;
 	}
 	int ret = 0;
 	for (int i = 0; i < 19; i++)
@@ -295,8 +297,14 @@ int Game::move(pos p)
 		return -1;
 	board[p.y][p.x] = turn;
 	capture = checkCapture(p);
-	if (!won)
+	if (!trueWon && !won)
 		won = checkWin();
+	else if (!trueWon && checkWin()){
+		trueWon = won;
+		won = false;
+	}else{
+		won = false;
+	}
 	if (!capture)
 		if (!checkValid(p))
 		{

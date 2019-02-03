@@ -14,6 +14,7 @@ public:
 	bool w;
 	char turn;
 	char won;
+	char trueWon;
 	int score;
 	int cap_b;
 	int cap_w;

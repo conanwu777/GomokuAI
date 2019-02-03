@@ -45,9 +45,12 @@ void	Display::refresh()
 	printNumber(whiteTotalTime.sec, 1426, 850, 1, 1);
 	printNumber(whiteTotalTime.milli, 1497, 850, 1, 1);
 
+	if (game.trueWon){
+		SDL_Rect box = {550, 100, 500, 98};
+		SDL_RenderCopy(rend, (game.trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
+	}
+
 	SDL_RenderPresent(rend);
-	if (game.won)
-		cout << (game.won == 'b' ? "Black" : "White") << " had won the game\n";
 }
 
 void Display::updateTime(char color){
@@ -164,6 +167,12 @@ Display::Display(Game g) : game(g)
 	tmpSurf = SDL_LoadBMP("tex/nums_w.bmp");
 	num_w = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
+	tmpSurf = SDL_LoadBMP("tex/whiteWin.bmp");
+	whiteWin = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
+	tmpSurf = SDL_LoadBMP("tex/blackWin.bmp");
+	blackWin = SDL_CreateTextureFromSurface(rend, tmpSurf);
+	SDL_FreeSurface(tmpSurf);
 	whiteTime.milli = 0;
 	whiteTime.sec = 0;
 	whiteTime.min = 0;
@@ -211,7 +220,7 @@ void		Display::checkClick()
 		hist.push(game);
 		while (forward.size())
 			forward.pop();
-		if (!first)
+		if (!first && !game.won)
 			Selector::rankPlayerMoves(*this, game);
 		if (game.move(p) == -1)
 		{
@@ -238,8 +247,8 @@ void		Display::checkClick()
 				game.mult /= 0.8;
 			cout << "mult : " << game.mult << endl;
 		}
-		if (game.won)
-			exit(0);
+		if (game.trueWon)
+			winTrigger();
 	}
 }
 
@@ -315,6 +324,11 @@ void	Display::checkAIMove()
 	outputMove();
 }
 
+void	Display::winTrigger(){
+	takeInput = false;
+	refresh();
+}
+
 void		Display::run()
 {
 	if (game.b)
@@ -332,18 +346,23 @@ void		Display::run()
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
 				exit (1);
-			checkClick();
+			if (takeInput)
+				checkClick();
 			checkHist();
 			checkHint();
 		}
-		if (isAITurn())
+		if (game.trueWon){
+			winTrigger();
+		}
+		else{
+			takeInput = true;
+		}
+		if (takeInput && isAITurn())
 		{
 			begin = std::chrono::steady_clock::now();
 			checkAIMove();
 			end = std::chrono::steady_clock::now();
 			updateTime(game.turn);
-			if (game.won)
-				break;
 		}
 	}
 }
