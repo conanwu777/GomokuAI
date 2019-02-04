@@ -198,12 +198,15 @@ Display::~Display()
 
 void Display::outputMove()
 {
-	// cout << "Free 4 : " << game->comp[0] << ", " << game->comp[1] << endl;
-	// cout << "Half-open 4 : " << game->comp[2] << ", " << game->comp[3] << endl;
-	// cout << "Free 3 : " << game->comp[4] << ", " << game->comp[5] << endl;
-	// cout << "Half-open 3 / Free 2 : " << game->comp[6] << ", " << game->comp[7] << endl;
-	// cout << "Capture : " << game->cap_b << ", " << game->cap_w << endl;
-	// cout << "Player : " << game->score << endl;
+	if (game->pv)
+	{
+		cout << game->pv->nxs.size() << endl;
+		for (auto it = game->pv->nxs.begin(); it != game->pv->nxs.end(); it++)
+		{
+			cout << it->first.x << ", " << it->first.y
+			<< " : " << it->second->score << endl;
+		}
+	}
 	refresh();
 
 }
@@ -224,7 +227,6 @@ void		Display::checkClick()
 		Game *nxGame = game->move(p); 
 		if (!nxGame)
 		{
-
 			cout << "Invalid move\n";
 			hist.pop();
 			return ;
@@ -232,7 +234,7 @@ void		Display::checkClick()
 		else
 			game = nxGame;
 		end = std::chrono::steady_clock::now();
-		updateTime(game->turn);
+		updateTime(game->turn == 'b' ? 'w' : 'b');
 		outputMove();
 		begin = std::chrono::steady_clock::now();
 		// if (first)
@@ -298,29 +300,28 @@ void		Display::checkHist()
 
 void	Display::checkHint()
 {
-	if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
+	if (event.type != SDL_KEYUP || event.key.keysym.sym != SDLK_h)
+		return ;
+	hist.push(game);
+	bool tb = b;
+	bool tw = w;
+	b = true;
+	w = true;
+	Game *nextGame = game->aiMove();
+	if (nextGame == NULL)
 	{
-		hist.push(game);
-		bool tb = b;
-		bool tw = w;
-		b = true;
-		w = true;
-		Game * nextGame = game->aiMove();
-		if (nextGame == NULL)
-		{
-			cout << "Invalid move\n";
-			hist.pop();
-		}
-		else
-			game = nextGame;
-		refresh();
-		usleep(500000);
-		game = game->pv;
+		cout << "Invalid move\n";
 		hist.pop();
-		refresh();
-		b = tb;
-		w = tw;
 	}
+	else
+		game = nextGame;
+	refresh();
+	usleep(500000);
+	game = game->pv;
+	hist.pop();
+	refresh();
+	b = tb;
+	w = tw;
 }
 
 void	Display::checkAIMove()
@@ -355,7 +356,6 @@ void		Display::run()
 		if (!isAITurn() && SDL_PollEvent(&event))
 		{
 //this should be in a separate thread
-
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
 				exit (1);
@@ -364,18 +364,17 @@ void		Display::run()
 			checkHist();
 			checkHint();
 		}
-		if (game->trueWon){
+		if (game->trueWon)
 			winTrigger();
-		}
-		else{
+		else
 			takeInput = true;
-		}
 		if (takeInput && isAITurn())
 		{
 			begin = std::chrono::steady_clock::now();
 			checkAIMove();
 			end = std::chrono::steady_clock::now();
 			updateTime(game->turn);
+cout << endl << endl;
 		}
 	}
 }

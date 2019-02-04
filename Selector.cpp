@@ -48,62 +48,60 @@ vector<Move> playerMoves;
 // 	return 1;
 // }
 
-bool	tryMove(Game &g, int depth, char c, pos test,
+bool	tryMove(Game *g, int depth, char c, pos test,
 int *ret, bool last)
 {	
-	if (g.move(test) != NULL)
+	if (!g->move(test))
+		return false;
+	Game *t = g->nxs[test];
+	int tmp = minimax(t, depth + 1, c, last);
+	if ((g->turn != c && tmp < *ret) || (g->turn == c && tmp > *ret))
 	{
-		Game *t = g.nxs[test];
-		int tmp = minimax(*t, depth + 1, c, last);
-		if ((g.turn != c && tmp < *ret) || (g.turn == c && tmp > *ret))
+		*ret = tmp;
+		if (depth == 0)
+			nxMove = test;
+		if (g->turn == c)
 		{
-			*ret = tmp;
-			if (depth == 0){
-				nxMove = test;
-			}
-			if (g.turn == c)
-			{
-				g.alpha = max(g.alpha, *ret);
-				killerAlpha[depth] = test;
-				if (g.alpha >= g.beta)
-					return true;
-			}
-			else
-			{
-				g.beta = min(g.beta, *ret);
-				killerBeta[depth] = test;
-				if (g.alpha >= g.beta)
-					return true;
-			}
+			g->alpha = max(g->alpha, *ret);
+			killerAlpha[depth] = test;
+			if (g->alpha >= g->beta)
+				return true;
+		}
+		else
+		{
+			g->beta = min(g->beta, *ret);
+			killerBeta[depth] = test;
+			if (g->alpha >= g->beta)
+				return true;
 		}
 	}
 	return false;
 }
 
-int minimax(Game &g, int depth, char c, bool last)
+int minimax(Game *g, int depth, char c, bool last)
 {
-	g.alpha = INT_MIN;
-	g.beta = INT_MAX;
+	g->alpha = INT_MIN;
+	g->beta = INT_MAX;
 	int neg = (c == 'b' ? 1 : -1);
-	if (depth >= MAX_DEPTH || g.won || last)
-		return neg * g.score / (2 << depth);
+	if (depth >= MAX_DEPTH || g->won || last)
+		return neg * g->score / (2 << depth);
 	for (int k = 0; k < 6; k++)
-		if (g.comp[k])
+		if (g->comp[k])
 			last = true;
-	int ret = (g.turn != c ? INT_MAX : INT_MIN);
-	if (!g.board[killerAlpha[depth].y][killerAlpha[depth].x]
-		&& g.adjacent(killerAlpha[depth]))
+	int ret = (g->turn != c ? INT_MAX : INT_MIN);
+	if (!g->board[killerAlpha[depth].y][killerAlpha[depth].x]
+		&& g->adjacent(killerAlpha[depth]))
 		if (tryMove(g, depth, c, killerAlpha[depth], &ret, last))
 			return ret;
-	if (!g.board[killerBeta[depth].y][killerBeta[depth].x]
-		&& g.adjacent(killerBeta[depth]))
+	if (!g->board[killerBeta[depth].y][killerBeta[depth].x]
+		&& g->adjacent(killerBeta[depth]))
 		if (tryMove(g, depth, c, killerBeta[depth], &ret, last))
 			return ret;
 	pos iter;
 	for (iter.y = 0; iter.y < 19; iter.y++)
 		for (iter.x = 0; iter.x < 19; iter.x++)
 		{
-			if (!g.board[iter.y][iter.x] && g.adjacent(iter))
+			if (!g->board[iter.y][iter.x] && g->adjacent(iter))
 			{
 				if (iter == killerAlpha[depth])
 					continue;

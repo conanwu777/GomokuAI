@@ -278,11 +278,16 @@ void Game::getScore()
 	if (cap_w)
 		ret -= 20000 + 4000 * (cap_w * cap_w);
 	score = ret;
+
+// cout << "getting score (" << lastMv.x << ", " << lastMv.y << ") : " << endl;
+// cout << comp[0] << ", " << comp[1] << " | " << comp[2] << ", " << comp[3] <<
+// " | " << comp[4] << ", " << comp[5] << " | " << comp[6] << ", " << comp[7] << endl;
+// cout << cap_b << "," << cap_w << " | " << score << endl;
+
 }
 
 Game *Game::move(pos p)
 {
-
 	bool capture = true;
 
 	if (nxs.find(p) != nxs.end())
@@ -308,10 +313,10 @@ Game *Game::move(pos p)
 		return NULL;
 	}
 	nxs[p] = ret;
+cout << lastMv.x << ", " << lastMv.y << " -> " << p.x << ", " << p.y << endl; 
 	ret->pv = this;
 	ret->lastMv = p;
 	ret->getScore();
-	cout << ret->score << endl;
 	ret->turn = (turn == 'b' ? 'w' : 'b');
 	return ret;
 }
@@ -320,7 +325,6 @@ Game *Game::aiMove()
 {
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	Game g = *this;
-	minimax(g, 0, turn, false);
+	minimax(this, 0, turn, false);
 	return move(nxMove);
 }

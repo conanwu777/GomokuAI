@@ -9,7 +9,7 @@ class Game {
 public:
 	int comp[8];
 	int alpha;
-    int beta;
+	int beta;
 	char turn;
 	char won;
 	char trueWon;
