@@ -2,31 +2,50 @@
 #include "Game.hpp"
 #include "Display.hpp"
 
+bool b;
+bool w;
+float mult_b = 1;
+float mult_w = 1;
+
 bool operator==(const pos& lhs, const pos& rhs)
 {
-    return (lhs.x == rhs.x && lhs.y == rhs.y);
+	return (lhs.x == rhs.x && lhs.y == rhs.y);
 }
 
 pos operator*(int num, const pos& p)
 {
-    pos nPos;
-    nPos.x = p.x * num;
+	pos nPos;
+	nPos.x = p.x * num;
 	nPos.y = p.y * num;
-   return nPos;
+	return nPos;
 }
 
 pos operator+(const pos& p, const pos& other)
 {
-  pos nPos;
-  nPos.x = p.x + other.x;
-  nPos.y = p.y + other.y;
-  return nPos;
+	pos nPos;
+	nPos.x = p.x + other.x;
+	nPos.y = p.y + other.y;
+	return nPos;
 }
+
+pos pos::operator=(const pos& p)
+{
+	x = p.x;
+	y = p.y;
+	return *this;
+}
+
+pos::pos(const pos &p)
+{
+	x = p.x;
+	y = p.y;
+}
+
 
 int main (int ac, char **av)
 {
-	bool b = false;
-	bool w = false;
+	b = false;
+	w = false;
 
 	srand(time(NULL));
 	if (ac == 1)
@@ -45,7 +64,7 @@ int main (int ac, char **av)
 		cout << "Usage: Gomoku [-w | -b | -a]" << endl;
 		exit(1);
 	}
-    Game game(b, w);
+    Game *game = new Game();
     Display disp(game);
     disp.run();
     return 0;

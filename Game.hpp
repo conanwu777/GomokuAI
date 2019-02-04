@@ -10,23 +10,24 @@ public:
 	int comp[8];
 	int alpha;
     int beta;
-	bool b;
-	bool w;
 	char turn;
 	char won;
 	char trueWon;
 	int score;
 	int cap_b;
 	int cap_w;
-	float mult;
 	char board[19][19];
+
+	map<pos, Game*, posCompare> nxs;
+	Game *pv;
+	pos lastMv;
+
 	Game();
-	Game(bool b, bool w);
 	Game(const Game &g);
 	Game& operator=(const Game &g);
 	~Game();
-	int aiMove();
-	int move(pos p);
+	Game *aiMove();
+	Game *move(pos p);
 	char checkWin();
 	bool capture(pos p, int x, int y, char opp);
 	bool checkCapture(pos p);

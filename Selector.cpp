@@ -1,64 +1,66 @@
-#include "Selector.hpp"
+#include "gomoku.hpp"
+#include "Game.hpp"
+#include "Display.hpp"
 
-pos Selector::killerAlpha[10];
-pos Selector::killerBeta[10];
-pos Selector::nxMove;
-vector<Move> Selector::playerMoves;
+pos killerAlpha[10];
+pos killerBeta[10];
+pos nxMove;
+vector<Move> playerMoves;
 
-bool compareMove(Move &m1, Move &m2) 
-{
-	if (m1.turn == 'b')
-		return m1.score >= m2.score;
-	else
-		return m1.score < m2.score;
-}
+// bool compareMove(Move &m1, Move &m2) 
+// {
+// 	if (m1.turn == 'b')
+// 		return m1.score >= m2.score;
+// 	else
+// 		return m1.score < m2.score;
+// }
 
-Move Selector::createMove(Game &g, Game &t, pos p)
-{
-	Move m;
+// Move createMove(Game &g, Game &t, pos p)
+// {
+// 	Move m;
 
-	m.p = p;
-	m.score = t.score;
-	m.turn = g.turn;
-	m.isCapture = (t.cap_b > g.cap_b || t.cap_w > g.cap_w);
-	m.isThree = (t.comp[4] > g.comp[4] || t.comp[5] > g.comp[5]);
-	m.isFour = (t.comp[2] > g.comp[2] || t.comp[3] > g.comp[3]);
-	return m;
-}
+// 	m.p = p;
+// 	m.score = t.score;
+// 	m.turn = g.turn;
+// 	m.isCapture = (t.cap_b > g.cap_b || t.cap_w > g.cap_w);
+// 	m.isThree = (t.comp[4] > g.comp[4] || t.comp[5] > g.comp[5]);
+// 	m.isFour = (t.comp[2] > g.comp[2] || t.comp[3] > g.comp[3]);
+// 	return m;
+// }
 
-int Selector::rankPlayerMoves(Display &d, Game &g)
-{
-	if (d.isAITurn())
-		return 0;
-	Selector::playerMoves.clear();
-	pos p;
-	for (p.y = 0; p.y < 19; p.y++)
-		for (p.x = 0; p.x < 19; p.x++)
-		{
-			if (g.board[p.y][p.x] || !g.adjacent(p))
-				continue ;
-			Game t = g;
-			if (t.move(p) == -1)
-				continue ;
+// int rankPlayerMoves(Display &d, Game &g)
+// {
+// 	if (d.isAITurn())
+// 		return 0;
+// 	playerMoves.clear();
+// 	pos p;
+// 	for (p.y = 0; p.y < 19; p.y++)
+// 		for (p.x = 0; p.x < 19; p.x++)
+// 		{
+// 			if (g.board[p.y][p.x] || !g.adjacent(p))
+// 				continue ;
+// 			Game *t = g.move(p);
+// 			if (t == NULL)
+// 				continue ;
+// 			playerMoves.push_back(createMove(g, *t, p));
+// 		}
+// 	sort(playerMoves.begin(), playerMoves.end(), compareMove);
+// 	return 1;
+// }
 
-			Selector::playerMoves.push_back(Selector::createMove(g, t, p));
-		}
-	sort(Selector::playerMoves.begin(), Selector::playerMoves.end(), compareMove);
-	return 1;
-}
-
-bool	Selector::tryMove(Game &g, int depth, char c, pos test,
+bool	tryMove(Game &g, int depth, char c, pos test,
 int *ret, bool last)
 {	
-	Game t = g;
-	if (t.move(test) != -1)
+	if (g.move(test) != NULL)
 	{
-		int tmp = Selector::minimax(t, depth + 1, c, last);
+		Game *t = g.nxs[test];
+		int tmp = minimax(*t, depth + 1, c, last);
 		if ((g.turn != c && tmp < *ret) || (g.turn == c && tmp > *ret))
 		{
 			*ret = tmp;
-			if (depth == 0)
-				Selector::nxMove = test;
+			if (depth == 0){
+				nxMove = test;
+			}
 			if (g.turn == c)
 			{
 				g.alpha = max(g.alpha, *ret);
@@ -78,8 +80,10 @@ int *ret, bool last)
 	return false;
 }
 
-int Selector::minimax(Game &g, int depth, char c, bool last)
+int minimax(Game &g, int depth, char c, bool last)
 {
+	g.alpha = INT_MIN;
+	g.beta = INT_MAX;
 	int neg = (c == 'b' ? 1 : -1);
 	if (depth >= MAX_DEPTH || g.won || last)
 		return neg * g.score / (2 << depth);

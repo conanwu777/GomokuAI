@@ -1,5 +1,4 @@
 #include "Display.hpp"
-#include "Selector.hpp"
 
 void	Display::refresh()
 {
@@ -21,9 +20,9 @@ void	Display::refresh()
 		for (int j = 0; j < 19; j++)
 		{
 			rect.x = j * rect.w + 325;
-			if (game.board[i][j] == 'b')
+			if (game->board[i][j] == 'b')
 				SDL_RenderCopy(rend, black, NULL, &rect);
-			else if (game.board[i][j] == 'w')
+			else if (game->board[i][j] == 'w')
 				SDL_RenderCopy(rend, white, NULL, &rect);
 		}
 	}
@@ -45,9 +44,9 @@ void	Display::refresh()
 	printNumber(whiteTotalTime.sec, 1426, 850, 1, 1);
 	printNumber(whiteTotalTime.milli, 1497, 850, 1, 1);
 
-	if (game.trueWon){
+	if (game->trueWon){
 		SDL_Rect box = {550, 100, 500, 98};
-		SDL_RenderCopy(rend, (game.trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
+		SDL_RenderCopy(rend, (game->trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
 	}
 
 	SDL_RenderPresent(rend);
@@ -118,7 +117,7 @@ void    Display::capturedPieces()
     rect.w = 50;
     rect.h = 50;
     rect.y = H - 100;
-    for (int i = 0; i < game.cap_b; i++)
+    for (int i = 0; i < game->cap_b; i++)
     {
         rect.x = 175;
         SDL_RenderCopy(rend, white, NULL, &rect);
@@ -128,7 +127,7 @@ void    Display::capturedPieces()
         rect.y -= 50;
     }
     rect.y = 50;
-    for (int i = 0; i < game.cap_w; i++)
+    for (int i = 0; i < game->cap_w; i++)
     {
         rect.x = 1375;
         SDL_RenderCopy(rend, black, NULL, &rect);
@@ -139,7 +138,7 @@ void    Display::capturedPieces()
     }
 }
 
-Display::Display(Game g) : game(g)
+Display::Display(Game *g) : game(g)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("Gomoku", SDL_WINDOWPOS_CENTERED,
@@ -155,10 +154,10 @@ Display::Display(Game g) : game(g)
 	tmpSurf = SDL_LoadBMP("tex/black.bmp");
 	black = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP(game.b ? "tex/ai_b.bmp" : "tex/man_b.bmp");
+	tmpSurf = SDL_LoadBMP(b ? "tex/ai_b.bmp" : "tex/man_b.bmp");
 	left = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	tmpSurf = SDL_LoadBMP(game.w ? "tex/ai_w.bmp" : "tex/man_w.bmp");
+	tmpSurf = SDL_LoadBMP(w ? "tex/ai_w.bmp" : "tex/man_w.bmp");
 	right = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
 	tmpSurf = SDL_LoadBMP("tex/nums_b.bmp");
@@ -199,12 +198,12 @@ Display::~Display()
 
 void Display::outputMove()
 {
-	// cout << "Free 4 : " << game.comp[0] << ", " << game.comp[1] << endl;
-	// cout << "Half-open 4 : " << game.comp[2] << ", " << game.comp[3] << endl;
-	// cout << "Free 3 : " << game.comp[4] << ", " << game.comp[5] << endl;
-	// cout << "Half-open 3 / Free 2 : " << game.comp[6] << ", " << game.comp[7] << endl;
-	// cout << "Capture : " << game.cap_b << ", " << game.cap_w << endl;
-	// cout << "Player : " << game.score << endl;
+	// cout << "Free 4 : " << game->comp[0] << ", " << game->comp[1] << endl;
+	// cout << "Half-open 4 : " << game->comp[2] << ", " << game->comp[3] << endl;
+	// cout << "Free 3 : " << game->comp[4] << ", " << game->comp[5] << endl;
+	// cout << "Half-open 3 / Free 2 : " << game->comp[6] << ", " << game->comp[7] << endl;
+	// cout << "Capture : " << game->cap_b << ", " << game->cap_w << endl;
+	// cout << "Player : " << game->score << endl;
 	refresh();
 
 }
@@ -220,43 +219,47 @@ void		Display::checkClick()
 		hist.push(game);
 		while (forward.size())
 			forward.pop();
-		if (!first && !game.won)
-			Selector::rankPlayerMoves(*this, game);
-		if (game.move(p) == -1)
+		// if (!first && !game->won)
+		// 	rankPlayerMoves(*this, *game);
+		Game *nxGame = game->move(p); 
+		if (!nxGame)
 		{
+
 			cout << "Invalid move\n";
 			hist.pop();
 			return ;
 		}
+		else
+			game = nxGame;
 		end = std::chrono::steady_clock::now();
-		updateTime(game.turn);
+		updateTime(game->turn);
 		outputMove();
 		begin = std::chrono::steady_clock::now();
-		if (first)
-		{
-			first = false;
-			return ;
-		}
-		Move m = Selector::createMove(hist.top(), game, p);
-		Move a = *Selector::playerMoves.begin();
-		if (!(a.p == p))
-		{
-			if (a.isCapture && !m.isCapture)
-				game.mult *= 0.8;
-			else if (!a.isCapture && m.isCapture)
-				game.mult /= 0.8;
-			cout << "mult : " << game.mult << endl;
-		}
-		if (game.trueWon)
+		// if (first)
+		// {
+		// 	first = false;
+		// 	return ;
+		// }
+		// Move m = createMove(*hist.top(), *game, p);
+		// Move a = *playerMoves.begin();
+		// if (!(a.p == p))
+		// {
+		// 	if (a.isCapture && !m.isCapture)
+		// 		(game->turn == 'w' ? mult_b : mult_w) *= 0.8;
+		// 	else if (!a.isCapture && m.isCapture)
+		// 		(game->turn == 'w' ? mult_b : mult_w) /= 0.8;
+		// 	cout << "mult : " << mult_b << ", " << mult_w << endl;
+		// }
+		if (game->trueWon)
 			winTrigger();
 	}
 }
 
 bool		Display::isAITurn()
 {
-	if (game.turn == 'b' && game.b)
+	if (game->turn == 'b' && b)
 		return true;
-	if (game.turn == 'w' && game.w)
+	if (game->turn == 'w' && w)
 		return true;
 	return false;
 }
@@ -298,29 +301,39 @@ void	Display::checkHint()
 	if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_h)
 	{
 		hist.push(game);
-		game.b = true;
-		game.w = true;
-		if (game.aiMove() == -1)
+		bool tb = b;
+		bool tw = w;
+		b = true;
+		w = true;
+		Game * nextGame = game->aiMove();
+		if (nextGame == NULL)
 		{
 			cout << "Invalid move\n";
 			hist.pop();
 		}
+		else
+			game = nextGame;
 		refresh();
 		usleep(500000);
-		game = hist.top();
+		game = game->pv;
 		hist.pop();
 		refresh();
+		b = tb;
+		w = tw;
 	}
 }
 
 void	Display::checkAIMove()
 {
 	hist.push(game);
-	if (game.aiMove() == -1)
+	Game * nextGame = game->aiMove();
+	if (nextGame == NULL)
 	{
 		cout << "Invalid move\n";
 		hist.pop();
 	}
+	else
+		game = nextGame;
 	outputMove();
 }
 
@@ -331,10 +344,10 @@ void	Display::winTrigger(){
 
 void		Display::run()
 {
-	if (game.b)
+	if (b)
 	{
-		game.board[9][9] = 'b';
-		game.turn = 'w';
+		game->board[9][9] = 'b';
+		game->turn = 'w';
 	}
 	refresh();
 	while (1)
@@ -351,7 +364,7 @@ void		Display::run()
 			checkHist();
 			checkHint();
 		}
-		if (game.trueWon){
+		if (game->trueWon){
 			winTrigger();
 		}
 		else{
@@ -362,7 +375,7 @@ void		Display::run()
 			begin = std::chrono::steady_clock::now();
 			checkAIMove();
 			end = std::chrono::steady_clock::now();
-			updateTime(game.turn);
+			updateTime(game->turn);
 		}
 	}
 }

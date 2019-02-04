@@ -1,7 +1,5 @@
 #include "Game.hpp"
-#include "Selector.hpp"
 #include "Display.hpp"
-#include <chrono>
 
 bool Game::inBound(int x, int y) const
 {
@@ -30,16 +28,9 @@ bool Game::adjacent(pos p) const
 }
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0), b(false), w(false), mult(1) , trueWon(0)
+alpha(INT_MIN), beta(INT_MAX), score(0), trueWon(0), pv(NULL)
 {
-	for (int i = 0; i < 19; i++)
-		for (int j = 0; j < 19; j++)
-			board[i][j] = 0;
-}
-
-Game::Game(bool b, bool w) : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0), b(b), w(w), mult(1), trueWon(0)
-{
+	lastMv = {-1, -1};
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
 			board[i][j] = 0;
@@ -50,14 +41,14 @@ Game& Game::operator=(const Game &g)
 	trueWon = g.trueWon;
 	alpha = g.alpha;
 	beta = g.beta;
-	b = g.b;
-	w = g.w;
 	turn = g.turn;
 	won = g.won;
 	score = g.score;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
-	mult = g.mult;
+	nxs = g.nxs;
+	pv = g.pv;
+	lastMv = g.lastMv;
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
@@ -110,8 +101,8 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			else if (curBlock == 4 || (prevBlock && curBlock &&
 				curBlock + prevBlock == 4 && curPlayer == prevPlayer))
 				comp[(curPlayer == 'b' ? 2 : 3)]++;
-			else if (open && (curBlock == 3 || (prevOpen && prevBlock && curBlock &&
-				curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
+			else if (open && (curBlock == 3 || (prevOpen && prevBlock && curBlock
+				&& curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
 			else if (open && (curBlock == 2 || (prevBlock && curBlock &&
 				curBlock + prevBlock == 2  && curPlayer == prevPlayer)))
@@ -289,38 +280,47 @@ void Game::getScore()
 	score = ret;
 }
 
-int Game::move(pos p)
+Game *Game::move(pos p)
 {
+
 	bool capture = true;
 
-	if (!inBound(p.x, p.y) || board[p.y][p.x])
-		return -1;
-	board[p.y][p.x] = turn;
-	capture = checkCapture(p);
-	if (!trueWon && !won)
-		won = checkWin();
-	else if (!trueWon && checkWin()){
-		trueWon = won;
-		won = false;
-	}else{
-		won = false;
+	if (nxs.find(p) != nxs.end())
+		return nxs[p];
+	if (!inBound(p.x, p.y) || board[p.y][p.x]){
+		return NULL;
 	}
-	if (!capture)
-		if (!checkValid(p))
-		{
-			board[p.y][p.x] = 0;
-			return -1;
-		}
-	getScore();
-	turn = (turn == 'b' ? 'w' : 'b');
-	return 1;
+	Game *ret = new Game(*this);
+	ret->board[p.y][p.x] = turn;
+	capture = ret->checkCapture(p);
+	if (!ret->trueWon && !ret->won)
+		ret->won = ret->checkWin();
+	else if (!ret->trueWon && ret->checkWin())
+	{
+		ret->trueWon = ret->won;
+		ret->won = false;
+	}
+	else
+		ret->won = false;
+	if (!capture && !ret->checkValid(p))
+	{
+		delete ret;
+		return NULL;
+	}
+	nxs[p] = ret;
+	ret->pv = this;
+	ret->lastMv = p;
+	ret->getScore();
+	cout << ret->score << endl;
+	ret->turn = (turn == 'b' ? 'w' : 'b');
+	return ret;
 }
 
-int Game::aiMove()
+Game *Game::aiMove()
 {
 	alpha = INT_MIN;
 	beta = INT_MAX;
 	Game g = *this;
-	Selector::minimax(g, 0, turn, false);
-	return move(Selector::nxMove);
+	minimax(g, 0, turn, false);
+	return move(nxMove);
 }

@@ -29,16 +29,16 @@ private:
     SDL_Texture* num_w;
     SDL_Texture* blackWin;
     SDL_Texture* whiteWin;
-    Game game;
+    Game *game;
     bool takeInput = true;
     chrono::steady_clock::time_point begin;
     chrono::steady_clock::time_point end;
     Display();
 
 public:
-    stack<Game> hist;
-    stack<Game> forward;
-    Display(Game g);
+    stack<Game*> hist;
+    stack<Game*> forward;
+    Display(Game *g);
     ~Display();
     void refresh();
     void run();
