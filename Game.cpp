@@ -288,19 +288,16 @@ void Game::getScore()
 
 Game *Game::move(pos p)
 {
-	bool capture = true;
-
 	if (nxs.find(p) != nxs.end())
 	{
 		nxs[p]->turn = (turn == 'b' ? 'w' : 'b');
 		return nxs[p];
 	}
-	if (!inBound(p.x, p.y) || board[p.y][p.x]){
+	if (!inBound(p.x, p.y) || board[p.y][p.x])
 		return NULL;
-	}
 	Game *ret = new Game(*this);
 	ret->board[p.y][p.x] = turn;
-	capture = ret->checkCapture(p);
+	bool capture = ret->checkCapture(p);
 	if (!ret->trueWon && !ret->won)
 		ret->won = ret->checkWin();
 	else if (!ret->trueWon && ret->checkWin())
@@ -317,6 +314,7 @@ Game *Game::move(pos p)
 	}
 	nxs[p] = ret;
 // cout << lastMv.x << ", " << lastMv.y << " -> " << p.x << ", " << p.y << endl; 
+	ret->nxs.clear();
 	ret->pv = this;
 	ret->lastMv = p;
 	ret->getScore();

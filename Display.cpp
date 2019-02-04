@@ -326,9 +326,7 @@ void	Display::checkAIMove()
 {
 	Game *nextGame = game->aiMove();
 	hist.push(game);
-cout << game->turn << endl;
 	game = nextGame;
-cout << game->turn << endl;
 	outputMove();
 }
 

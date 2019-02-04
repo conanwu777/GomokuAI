@@ -7,7 +7,7 @@
 # include <vector>
 # include <map>
 
-# define MAX_DEPTH 3
+# define MAX_DEPTH 1
 
 using namespace std;
 
