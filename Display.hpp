@@ -36,7 +36,6 @@ private:
 	Display();
 
 public:
-	stack<Game*> hist;
 	stack<Game*> forward;
 	Display(Game *g);
 	~Display();
@@ -48,7 +47,6 @@ public:
 	void	checkClick();
 	void	checkHist();
 	void	checkHint();
-	void	checkAIMove();
 	void	capturedPieces();
 	bool	isAITurn();
 	void	winTrigger();

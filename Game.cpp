@@ -247,6 +247,26 @@ bool Game::checkValid(pos p)
 	return true;
 }
 
+void Game::rankMoves()
+{
+	if (!moves.empty())
+		return ;
+	pos iter;
+	for (iter.y = 0; iter.y < 19; iter.y++)
+		for (iter.x = 0; iter.x < 19; iter.x++)
+			if (!board[iter.y][iter.x] && adjacent(iter) && move(iter))
+					moves.push_back(iter);
+	int neg = (turn == 'w' ? -1 : 1);
+	for (int i = 0; i < moves.size() - 1; i++)
+		for (int j = i + 1; j < moves.size(); j++)
+			if (neg * nxs[moves[i]]->score < neg * nxs[moves[j]]->score)
+			{
+				pos t = moves[i];
+				moves[i] = moves[j];
+				moves[j] = t;
+			}
+}
+
 void Game::getScore()
 {
 	if (trueWon)
@@ -254,7 +274,8 @@ void Game::getScore()
 		score = (won == 'b' ? 2000000000 : -2000000000);
 		return ;
 	}
-	else if (won){
+	else if (won)
+	{
 		score = (won == 'b' ? 1000000000 : -1000000000);
 		return;
 	}

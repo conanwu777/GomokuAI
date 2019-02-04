@@ -7,14 +7,15 @@
 # include <vector>
 # include <map>
 
-# define MAX_DEPTH 1
+# define MAX_DEPTH 4
+# define CUTOFF 15
 
 using namespace std;
 
 class Game;
 class Display;
-
-struct pos {
+struct pos
+{
 	int x;
 	int y;
 	pos operator=(const pos& p);
@@ -37,27 +38,15 @@ struct posCompare
 	}
 };
 
-struct Move {
-	pos p;
-	int score;
-	char turn;
-	bool isCapture;
-	bool isThree;
-	bool isFour;
-};
-
 bool operator==(const pos& lhs, const pos& rhs);
 pos operator+(const pos& p, const pos& other);
 pos operator*(int num, const pos& p);
 
 int minimax(Game *g, int depth, char c, bool last);
 bool tryMove(Game *g, int depth, char c, pos test, int *ret, bool last);
-int	rankPlayerMoves(Display &d, Game &g);
-Move createMove(Game &g, Game &t, pos p);
 extern pos killerAlpha[10];
 extern pos killerBeta[10];
 extern pos nxMove;
-extern vector<Move> playerMoves;
 extern bool b;
 extern bool w;
 extern float mult_b;

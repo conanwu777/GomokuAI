@@ -17,6 +17,7 @@ public:
 	int cap_b;
 	int cap_w;
 	char board[19][19];
+	vector<pos> moves;
 
 	map<pos, Game*, posCompare> nxs;
 	Game *pv;
@@ -38,6 +39,7 @@ public:
 	bool checkLineThrees(deque<char> &line, char target);
 	char checkLine(int stx, int sty, int incx, int incy);
 	void getScore();
+	void rankMoves();
 };
 
 #endif

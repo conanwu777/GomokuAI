@@ -48,7 +48,6 @@ void	Display::refresh()
 		SDL_Rect box = {550, 100, 500, 98};
 		SDL_RenderCopy(rend, (game->trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
 	}
-
 	SDL_RenderPresent(rend);
 }
 
@@ -198,29 +197,26 @@ Display::~Display()
 
 void Display::outputMove()
 {
-	// if (game->pv)
-	// {
-	// 	cout << game->pv->nxs.size() << endl;
-	// 	for (auto it = game->pv->nxs.begin(); it != game->pv->nxs.end(); it++)
-	// 	{
-	// 		cout << it->first.x << ", " << it->first.y
-	// 		<< " : " << it->second->score << endl;
-	// 	}
-	// }
+	if (game->pv)
+	{
+		cout << game->pv->nxs.size() << endl;
+		for (int i = 0; i < game->pv->moves.size(); i++)
+		{
+			cout << game->pv->nxs[game->pv->moves[i]]->score << " : "
+			<< game->pv->moves[i].x << ", " << game->pv->moves[i].y << endl;
+		}
+	}
 	refresh();
 
 }
 
 void		Display::checkClick()
 {
-	// static bool first = true;
 	if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
 		pos p;
 		p.x = (event.motion.x - 325) / 50.0;
 		p.y = (event.motion.y - 25) / 50.0;
-		// if (!first && !game->won)
-		// 	rankPlayerMoves(*this, *game);
 		Game *nxGame = game->move(p);
 		if (!nxGame)
 		{
@@ -229,27 +225,12 @@ void		Display::checkClick()
 		}
 		while (forward.size())
 			forward.pop();
-		hist.push(game);
 		end = std::chrono::steady_clock::now();
 		updateTime(game->turn);
 		game = nxGame;
 		outputMove();
 		begin = std::chrono::steady_clock::now();
-		// if (first)
-		// {
-		// 	first = false;
-		// 	return ;
-		// }
-		// Move m = createMove(*hist.top(), *game, p);
-		// Move a = *playerMoves.begin();
-		// if (!(a.p == p))
-		// {
-		// 	if (a.isCapture && !m.isCapture)
-		// 		(game->turn == 'w' ? mult_b : mult_w) *= 0.8;
-		// 	else if (!a.isCapture && m.isCapture)
-		// 		(game->turn == 'w' ? mult_b : mult_w) /= 0.8;
-		// 	cout << "mult : " << mult_b << ", " << mult_w << endl;
-		// }
+
 		if (game->trueWon)
 			winTrigger();
 	}
@@ -268,27 +249,23 @@ void		Display::checkHist()
 {
 	if (event.type != SDL_KEYUP)
 		return ;
-	if (event.key.keysym.sym == SDLK_LEFT && hist.size())
+	if (event.key.keysym.sym == SDLK_LEFT && game->pv)
 	{
 		forward.push(game);
-		game = hist.top();
-		hist.pop();
-		while (hist.size() && isAITurn())
+		game = game->pv;
+		while (game->pv && isAITurn())
 		{
 			forward.push(game);
-			game = hist.top();
-			hist.pop();
+			game = game->pv;
 		}
 		refresh();
 	}
 	if (event.key.keysym.sym == SDLK_RIGHT && forward.size())
 	{
-		hist.push(game);
 		game = forward.top();
 		forward.pop();
 		while (forward.size() && isAITurn())
 		{
-			hist.push(game);
 			game = forward.top();
 			forward.pop();
 		}
@@ -300,34 +277,21 @@ void	Display::checkHint()
 {
 	if (event.type != SDL_KEYUP || event.key.keysym.sym != SDLK_h)
 		return ;
-	hist.push(game);
 	bool tb = b;
 	bool tw = w;
 	b = true;
 	w = true;
 	Game *nextGame = game->aiMove();
 	if (nextGame == NULL)
-	{
 		cout << "Invalid move\n";
-		hist.pop();
-	}
 	else
 		game = nextGame;
 	refresh();
 	usleep(500000);
 	game = game->pv;
-	hist.pop();
 	refresh();
 	b = tb;
 	w = tw;
-}
-
-void	Display::checkAIMove()
-{
-	Game *nextGame = game->aiMove();
-	hist.push(game);
-	game = nextGame;
-	outputMove();
 }
 
 void	Display::winTrigger(){
@@ -343,6 +307,7 @@ void		Display::run()
 		game->turn = 'w';
 	}
 	refresh();
+	game->rankMoves();
 	while (1)
 	{
 		if (!isAITurn() && SDL_PollEvent(&event))
@@ -363,7 +328,9 @@ void		Display::run()
 		if (takeInput && isAITurn())
 		{
 			begin = std::chrono::steady_clock::now();
-			checkAIMove();
+			Game *nextGame = game->aiMove();
+			game = nextGame;
+			outputMove();
 			end = std::chrono::steady_clock::now();
 			updateTime(game->turn);
 cout << endl << endl;
