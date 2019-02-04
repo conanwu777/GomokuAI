@@ -198,43 +198,41 @@ Display::~Display()
 
 void Display::outputMove()
 {
-	if (game->pv)
-	{
-		cout << game->pv->nxs.size() << endl;
-		for (auto it = game->pv->nxs.begin(); it != game->pv->nxs.end(); it++)
-		{
-			cout << it->first.x << ", " << it->first.y
-			<< " : " << it->second->score << endl;
-		}
-	}
+	// if (game->pv)
+	// {
+	// 	cout << game->pv->nxs.size() << endl;
+	// 	for (auto it = game->pv->nxs.begin(); it != game->pv->nxs.end(); it++)
+	// 	{
+	// 		cout << it->first.x << ", " << it->first.y
+	// 		<< " : " << it->second->score << endl;
+	// 	}
+	// }
 	refresh();
 
 }
 
 void		Display::checkClick()
 {
-	static bool first = true;
+	// static bool first = true;
 	if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
 		pos p;
 		p.x = (event.motion.x - 325) / 50.0;
 		p.y = (event.motion.y - 25) / 50.0;
-		hist.push(game);
-		while (forward.size())
-			forward.pop();
 		// if (!first && !game->won)
 		// 	rankPlayerMoves(*this, *game);
-		Game *nxGame = game->move(p); 
+		Game *nxGame = game->move(p);
 		if (!nxGame)
 		{
 			cout << "Invalid move\n";
-			hist.pop();
 			return ;
 		}
-		else
-			game = nxGame;
+		while (forward.size())
+			forward.pop();
+		hist.push(game);
 		end = std::chrono::steady_clock::now();
-		updateTime(game->turn == 'b' ? 'w' : 'b');
+		updateTime(game->turn);
+		game = nxGame;
 		outputMove();
 		begin = std::chrono::steady_clock::now();
 		// if (first)
@@ -326,15 +324,11 @@ void	Display::checkHint()
 
 void	Display::checkAIMove()
 {
+	Game *nextGame = game->aiMove();
 	hist.push(game);
-	Game * nextGame = game->aiMove();
-	if (nextGame == NULL)
-	{
-		cout << "Invalid move\n";
-		hist.pop();
-	}
-	else
-		game = nextGame;
+cout << game->turn << endl;
+	game = nextGame;
+cout << game->turn << endl;
 	outputMove();
 }
 

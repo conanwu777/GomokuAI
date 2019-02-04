@@ -291,7 +291,10 @@ Game *Game::move(pos p)
 	bool capture = true;
 
 	if (nxs.find(p) != nxs.end())
+	{
+		nxs[p]->turn = (turn == 'b' ? 'w' : 'b');
 		return nxs[p];
+	}
 	if (!inBound(p.x, p.y) || board[p.y][p.x]){
 		return NULL;
 	}
@@ -313,7 +316,7 @@ Game *Game::move(pos p)
 		return NULL;
 	}
 	nxs[p] = ret;
-cout << lastMv.x << ", " << lastMv.y << " -> " << p.x << ", " << p.y << endl; 
+// cout << lastMv.x << ", " << lastMv.y << " -> " << p.x << ", " << p.y << endl; 
 	ret->pv = this;
 	ret->lastMv = p;
 	ret->getScore();
@@ -326,5 +329,6 @@ Game *Game::aiMove()
 	alpha = INT_MIN;
 	beta = INT_MAX;
 	minimax(this, 0, turn, false);
-	return move(nxMove);
+	Game *ret = move(nxMove);
+	return ret;
 }
