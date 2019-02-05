@@ -170,7 +170,6 @@ Display::Display(Game *g) : game(g)
 	bzero(&blackTime, sizeof(blackTime));
 	bzero(&whiteTotalTime, sizeof(whiteTotalTime));
 	bzero(&blackTotalTime, sizeof(blackTotalTime));
-	begin = std::chrono::steady_clock::now();
 }
 
 Display::~Display()
@@ -232,7 +231,6 @@ void		Display::checkClick()
 		}
 		while (forward.size())
 			forward.pop();
-		end = std::chrono::steady_clock::now();
 		game->rankMoves();
 		if (game->moves.size() && isCapture(game->nxs[game->moves[0]]))
 			(game->turn == 'b' ? mult_b : mult_w) *= 0.9;
@@ -241,8 +239,12 @@ void		Display::checkClick()
 // cout << "mult : " << mult_b << ", " << mult_w << endl;
 		game->freeGames(p, true);
 		game = nxGame;
-		refresh();
-		begin = std::chrono::steady_clock::now();
+		if (game->turn == 'w'){
+			bzero(&whiteTime, sizeof(whiteTime));
+		}
+		else{
+			bzero(&blackTime, sizeof(blackTime));
+		}
 
 		if (game->trueWon)
 			winTrigger();
@@ -271,7 +273,8 @@ void		Display::checkHist()
 			forward.push(game);
 			game = game->pv;
 		}
-		refresh();
+		bzero(&whiteTime, sizeof(whiteTime));
+		bzero(&blackTime, sizeof(blackTime));
 	}
 	if (event.key.keysym.sym == SDLK_RIGHT && forward.size())
 	{
@@ -282,7 +285,8 @@ void		Display::checkHist()
 			game = forward.top();
 			forward.pop();
 		}
-		refresh();
+		bzero(&whiteTime, sizeof(whiteTime));
+		bzero(&blackTime, sizeof(blackTime));
 	}
 }
 
@@ -339,8 +343,7 @@ void		Display::run()
 			}
 			if (!isAITurn() && takeInput)
 				checkClick();
-			else if (!isAITurn())
-				checkHint();
+			checkHint();
 			checkHist();
 		}
 		if (game->trueWon)
@@ -349,12 +352,15 @@ void		Display::run()
 			takeInput = true;
 		if (takeInput && isAITurn())
 		{
-			begin = std::chrono::steady_clock::now();
 			Game *nextGame = game->aiMove();
 			game->freeGames(nextGame->lastMv, true);
 			game = nextGame;
-			refresh();
-			end = std::chrono::steady_clock::now();
+			if (game->turn == 'w'){
+				bzero(&whiteTime, sizeof(whiteTime));
+			}
+			else{
+				bzero(&blackTime, sizeof(blackTime));
+			}
 cout << endl << endl;
 		}
 	}

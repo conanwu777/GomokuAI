@@ -31,8 +31,6 @@ private:
 	SDL_Texture* whiteWin;
 	Game *game;
 	bool takeInput = true;
-	chrono::steady_clock::time_point begin;
-	chrono::steady_clock::time_point end;
 	Display();
 
 public:
