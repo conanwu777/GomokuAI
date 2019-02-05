@@ -39,17 +39,20 @@ public:
 	stack<Game*> forward;
 	Display(Game *g);
 	~Display();
+	void	printTime();
 	void	refresh();
 	void	run();
 	void	outputMove();
 	void	printNumber(int num, int x, int y, bool b, float scale);
-	void	updateTime(char color);
+	void	addTime(timeFrame *frame, float time);
+	void	updateTime(char color, float time);
 	void	checkClick();
 	void	checkHist();
 	void	checkHint();
 	void	capturedPieces();
 	bool	isAITurn();
 	void	winTrigger();
+	static int	TimerThread(void* param);
 
 	timeFrame whiteTime;
 	timeFrame blackTime;

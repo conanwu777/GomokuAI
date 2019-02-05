@@ -7,21 +7,21 @@ class Selector;
 
 class Game {
 public:
-	int comp[8];
-	int alpha;
-	int beta;
-	char turn;
-	char won;
-	char trueWon;
-	int score;
-	int cap_b;
-	int cap_w;
-	char board[19][19];
-	vector<pos> moves;
+	int			comp[8];
+	int			alpha;
+	int			beta;
+	char		turn;
+	char		won;
+	char		trueWon;
+	int			score;
+	int			cap_b;
+	int			cap_w;
+	char		board[19][19];
+	vector<pos>	moves;
 
-	map<pos, Game*, posCompare> nxs;
-	Game *pv;
-	pos lastMv;
+	unordered_map<pos, Game*, Hash>	nxs;
+	Game		*pv;
+	pos			lastMv;
 
 	Game();
 	Game(const Game &g);
@@ -39,7 +39,12 @@ public:
 	bool checkLineThrees(deque<char> &line, char target);
 	char checkLine(int stx, int sty, int incx, int incy);
 	void getScore();
+
 	void rankMoves();
+	int	minimax(int depth, char c, bool last);
+	bool tryMove(int depth, char c, pos test, int *ret, bool last);
+
+	void freeGames(pos p, bool b);
 };
 
 #endif

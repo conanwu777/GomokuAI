@@ -1,5 +1,24 @@
 #include "Display.hpp"
 
+void	Display::printTime()
+{
+	printNumber(blackTime.min, 84, 335, 0, 0.7);
+	printNumber(blackTime.sec, 134, 335, 0, 0.7);
+	printNumber(blackTime.milli, 185, 335, 0, 0.7);
+
+	printNumber(whiteTime.min, 1384, 910, 1, 0.7);
+	printNumber(whiteTime.sec, 1434, 910, 1, 0.7);
+	printNumber(whiteTime.milli, 1485, 910, 1, 0.7);
+
+	printNumber(blackTotalTime.min, 55, 275, 0, 1);
+	printNumber(blackTotalTime.sec, 126, 275, 0, 1);
+	printNumber(blackTotalTime.milli, 197, 275, 0, 1);
+
+	printNumber(whiteTotalTime.min, 1355, 850, 1, 1);
+	printNumber(whiteTotalTime.sec, 1426, 850, 1, 1);
+	printNumber(whiteTotalTime.milli, 1497, 850, 1, 1);
+}
+
 void	Display::refresh()
 {
 	SDL_Rect rect;
@@ -26,75 +45,50 @@ void	Display::refresh()
 				SDL_RenderCopy(rend, white, NULL, &rect);
 		}
 	}
-
 	capturedPieces();
-	printNumber(blackTime.min, 84, 335, 0, 0.7);
-	printNumber(blackTime.sec, 134, 335, 0, 0.7);
-	printNumber(blackTime.milli, 185, 335, 0, 0.7);
-
-	printNumber(whiteTime.min, 1384, 910, 1, 0.7);
-	printNumber(whiteTime.sec, 1434, 910, 1, 0.7);
-	printNumber(whiteTime.milli, 1485, 910, 1, 0.7);
-
-	printNumber(blackTotalTime.min, 55, 275, 0, 1);
-	printNumber(blackTotalTime.sec, 126, 275, 0, 1);
-	printNumber(blackTotalTime.milli, 197, 275, 0, 1);
-
-	printNumber(whiteTotalTime.min, 1355, 850, 1, 1);
-	printNumber(whiteTotalTime.sec, 1426, 850, 1, 1);
-	printNumber(whiteTotalTime.milli, 1497, 850, 1, 1);
-
-	if (game->trueWon){
+	printTime();
+	if (game->trueWon)
+	{
 		SDL_Rect box = {550, 100, 500, 98};
-		SDL_RenderCopy(rend, (game->trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
+		SDL_RenderCopy(rend,
+			(game->trueWon == 'w' ? whiteWin : blackWin), NULL, &box);
 	}
 	SDL_RenderPresent(rend);
 }
 
-void Display::updateTime(char color){
-	float time = std::chrono::duration_cast<std::chrono::milliseconds>
-	(end - begin).count() / 1000.0;
-	if (color == 'b')
-	{
-		blackTime.min = (int)time / 60;
-		blackTime.sec = (int)time % 60;
-		blackTime.milli = (time - (int)time) * 100;
-		blackTotalTime.min += blackTime.min;
-		blackTotalTime.sec += blackTime.sec;
-		blackTotalTime.milli += blackTime.milli;
+void Display::addTime(timeFrame *frame, float time)
+{
+	frame->min += (int)time / 60;
+	frame->sec += (int)time % 60;
+	frame->milli += (time - (int)time) * 100;
 
-		if (blackTotalTime.milli >= 100)
-		{
-			blackTotalTime.sec++;
-			blackTotalTime.milli -= 100;
-		}
-		if (blackTotalTime.sec >= 60)
-		{
-			blackTotalTime.min++;
-			blackTotalTime.sec -= 60;
-		}
+	if (frame->milli >= 100)
+	{
+		frame->sec++;
+		frame->milli -= 100;
 	}
-	else
+	if (frame->sec >= 60)
 	{
-		whiteTime.min = (int)time / 60;
-		whiteTime.sec = (int)time % 60;
-		whiteTime.milli = (time - (int)time) * 100;
-		whiteTotalTime.min += whiteTime.min;
-		whiteTotalTime.sec += whiteTime.sec;
-		whiteTotalTime.milli += whiteTime.milli;
-
-		if(whiteTotalTime.milli >= 100){
-			whiteTotalTime.sec++;
-			whiteTotalTime.milli -= 100;
-		}
-		if(whiteTotalTime.sec >= 60){
-			whiteTotalTime.min++;
-			whiteTotalTime.sec -= 60;
-		}
+		frame->min++;
+		frame->sec -= 60;
 	}
 }
 
-void Display::printNumber(int num, int x, int y, bool b, float scale){
+void Display::updateTime(char color, float time)
+{
+	timeFrame *frame;
+	timeFrame *totalFrame;
+
+	frame = (color == 'b' ? &blackTime : &whiteTime);
+	totalFrame = (color == 'b' ?
+		&blackTotalTime : &whiteTotalTime);
+
+	addTime(frame, time);
+	addTime(totalFrame, time);
+}
+
+void Display::printNumber(int num, int x, int y, bool b, float scale)
+{
 	while(num >= 100){
 		num /= 10;
 	}
@@ -171,21 +165,11 @@ Display::Display(Game *g) : game(g)
 	tmpSurf = SDL_LoadBMP("tex/blackWin.bmp");
 	blackWin = SDL_CreateTextureFromSurface(rend, tmpSurf);
 	SDL_FreeSurface(tmpSurf);
-	whiteTime.milli = 0;
-	whiteTime.sec = 0;
-	whiteTime.min = 0;
 
-	blackTime.milli = 0;
-	blackTime.sec = 0;
-	blackTime.min = 0;
-
-	whiteTotalTime.milli = 0;
-	whiteTotalTime.sec = 0;
-	whiteTotalTime.min = 0;
-
-	blackTotalTime.milli = 0;
-	blackTotalTime.sec = 0;
-	blackTotalTime.min = 0;
+	bzero(&whiteTime, sizeof(whiteTime));
+	bzero(&blackTime, sizeof(blackTime));
+	bzero(&whiteTotalTime, sizeof(whiteTotalTime));
+	bzero(&blackTotalTime, sizeof(blackTotalTime));
 	begin = std::chrono::steady_clock::now();
 }
 
@@ -195,19 +179,42 @@ Display::~Display()
 	SDL_DestroyRenderer(rend);
 }
 
-void Display::outputMove()
+// void Display::outputMove()
+// {
+// 	if (game->pv)
+// 	{
+// 		cout << game->pv->nxs.size() << endl;
+// 		for (int i = 0; i < game->pv->moves.size(); i++)
+// 		{
+// 			cout << game->pv->nxs[game->pv->moves[i]]->score << " : "
+// 			<< game->pv->moves[i].x << ", " << game->pv->moves[i].y << endl;
+// 		}
+// 	}
+// 	refresh();
+
+// }
+
+bool	isCapture(Game *g)
 {
-	if (game->pv)
+	if (!g->pv)
+		return false;
+	if (g->cap_b > g->pv->cap_b || g->cap_w > g->pv->cap_w)
+		return true;
+	return false;
+}
+
+int		Display::TimerThread(void* param)
+{
+	Display* disp = (Display*) param;
+	while (1)
 	{
-		cout << game->pv->nxs.size() << endl;
-		for (int i = 0; i < game->pv->moves.size(); i++)
+		SDL_Delay(50);
+		if (!disp->game->trueWon)
 		{
-			cout << game->pv->nxs[game->pv->moves[i]]->score << " : "
-			<< game->pv->moves[i].x << ", " << game->pv->moves[i].y << endl;
+			disp->updateTime(disp->game->turn, 0.05);
+			disp->refresh();
 		}
 	}
-	refresh();
-
 }
 
 void		Display::checkClick()
@@ -226,9 +233,15 @@ void		Display::checkClick()
 		while (forward.size())
 			forward.pop();
 		end = std::chrono::steady_clock::now();
-		updateTime(game->turn);
+		game->rankMoves();
+		if (game->moves.size() && isCapture(game->nxs[game->moves[0]]))
+			(game->turn == 'b' ? mult_b : mult_w) *= 0.9;
+		if (game->moves.size() && isCapture(nxGame))
+			(game->turn == 'b' ? mult_b : mult_w) /= 0.9;
+// cout << "mult : " << mult_b << ", " << mult_w << endl;
+		game->freeGames(p, true);
 		game = nxGame;
-		outputMove();
+		refresh();
 		begin = std::chrono::steady_clock::now();
 
 		if (game->trueWon)
@@ -294,7 +307,8 @@ void	Display::checkHint()
 	w = tw;
 }
 
-void	Display::winTrigger(){
+void	Display::winTrigger()
+{
 	takeInput = false;
 	refresh();
 }
@@ -308,18 +322,26 @@ void		Display::run()
 	}
 	refresh();
 	game->rankMoves();
+
+	SDL_Thread *thread;
+ 	thread = SDL_CreateThread(Display::TimerThread, "time", (void *)this);
+ 	SDL_DetachThread(thread);
 	while (1)
 	{
-		if (!isAITurn() && SDL_PollEvent(&event))
+		if (SDL_PollEvent(&event))
 		{
 //this should be in a separate thread
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
+			{	
+				game->freeGames({0, 0}, false);
 				exit (1);
-			if (takeInput)
+			}
+			if (!isAITurn() && takeInput)
 				checkClick();
+			else if (!isAITurn())
+				checkHint();
 			checkHist();
-			checkHint();
 		}
 		if (game->trueWon)
 			winTrigger();
@@ -329,10 +351,10 @@ void		Display::run()
 		{
 			begin = std::chrono::steady_clock::now();
 			Game *nextGame = game->aiMove();
+			game->freeGames(nextGame->lastMv, true);
 			game = nextGame;
-			outputMove();
+			refresh();
 			end = std::chrono::steady_clock::now();
-			updateTime(game->turn);
 cout << endl << endl;
 		}
 	}

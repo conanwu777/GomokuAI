@@ -5,38 +5,16 @@
 # include <ctime>
 # include <unistd.h>
 # include <vector>
-# include <map>
+# include <unordered_map>
+# include "Pos.hpp"
 
-# define MAX_DEPTH 4
-# define CUTOFF 15
+# define MAX_DEPTH 6
+# define CUTOFF 8
 
 using namespace std;
 
 class Game;
 class Display;
-struct pos
-{
-	int x;
-	int y;
-	pos operator=(const pos& p);
-	pos(const pos &p);
-	pos(){
-		x = 0;
-		y = 0;
-	}
-	pos(int nx, int ny){
-		x = nx;
-		y = ny;
-	}
-};
-
-struct posCompare
-{
-	bool operator() (const pos& lhs, const pos& rhs) const
-	{
-		return lhs.x * 20 + lhs.y < rhs.x * 20 + rhs.y;
-	}
-};
 
 bool operator==(const pos& lhs, const pos& rhs);
 pos operator+(const pos& p, const pos& other);
