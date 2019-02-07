@@ -9,14 +9,13 @@
 # define W 1600
 # define H 1000
 
-struct timeFrame{
+struct timeFrame {
 	int milli;
 	int sec;
 	int min;
 };
 
 class Display {
-private:
 	SDL_Window *win;
 	SDL_Renderer *rend;
 	SDL_Event event;
@@ -30,7 +29,9 @@ private:
 	SDL_Texture* blackWin;
 	SDL_Texture* whiteWin;
 	Game *game;
+
 	bool takeInput = true;
+	bool AIPlayed;
 	Display();
 
 public:
@@ -49,8 +50,8 @@ public:
 	void	checkHint();
 	void	capturedPieces();
 	bool	isAITurn();
-	void	winTrigger();
 	static int	TimerThread(void* param);
+	static int	preComp(void* param);
 
 	timeFrame whiteTime;
 	timeFrame blackTime;

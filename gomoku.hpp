@@ -8,8 +8,9 @@
 # include <unordered_map>
 # include "Pos.hpp"
 
-# define MAX_DEPTH 6
-# define CUTOFF 8
+
+# define MAX_DEPTH 4
+# define CUTOFF 15
 
 using namespace std;
 
@@ -20,11 +21,12 @@ bool operator==(const pos& lhs, const pos& rhs);
 pos operator+(const pos& p, const pos& other);
 pos operator*(int num, const pos& p);
 
-int minimax(Game *g, int depth, char c, bool last);
-bool tryMove(Game *g, int depth, char c, pos test, int *ret, bool last);
 extern pos killerAlpha[10];
 extern pos killerBeta[10];
 extern pos nxMove;
+
+extern unordered_map<pos, pos, Hash> guessMv;
+
 extern bool b;
 extern bool w;
 extern float mult_b;

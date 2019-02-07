@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Display.hpp"
+#include "Selector.hpp"
 
 Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
 alpha(INT_MIN), beta(INT_MAX), score(0), trueWon(0), pv(NULL)
@@ -39,12 +40,12 @@ void Game::getScore()
 {
 	if (trueWon)
 	{
-		score = (won == 'b' ? 2000000000 : -2000000000);
+		score = (won == 'b' ? 30000000 : -30000000);
 		return ;
 	}
 	else if (won)
 	{
-		score = (won == 'b' ? 1000000000 : -1000000000);
+		score = (won == 'b' ? 10000000 : -10000000);
 		return;
 	}
 	int ret = 0;
@@ -63,9 +64,9 @@ void Game::getScore()
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
 	ret += 1000 * comp[6] - 1000 * comp[7];
 	if (cap_b)
-		ret += 20000 + 4000 * (cap_b * cap_b);
+		ret += 20000 + 6000 * (cap_b * cap_b);
 	if (cap_w)
-		ret -= 20000 + 4000 * (cap_w * cap_w);
+		ret -= 20000 + 6000 * (cap_w * cap_w);
 	score = ret;
 
 // cout << "getting score (" << lastMv.x << ", " << lastMv.y << ") : " << endl;
@@ -116,10 +117,15 @@ Game *Game::move(pos p)
 
 Game *Game::aiMove()
 {
+	if (guessMv.find(lastMv) != guessMv.end())
+		return move(guessMv[lastMv]);
+	cout << "RUNNING MOVE\n";
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	minimax(0, turn, false);
-	Game *ret = move(nxMove);
+	// pos bestMove;
+	Selector sele(this, turn, MAX_DEPTH);
+	sele.minimax(0, false);
+	Game *ret = move(sele.out);
 	return ret;
 }
 

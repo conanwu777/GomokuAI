@@ -89,7 +89,6 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 char Game::checkWin()
 {
 	char ret = 0;
-
 	bzero(&comp[0], sizeof(int) * 8);
 	for (int i = 0; i < 19; i++)
 	{

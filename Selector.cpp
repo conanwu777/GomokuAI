@@ -1,6 +1,7 @@
 #include "gomoku.hpp"
 #include "Game.hpp"
 #include "Display.hpp"
+#include "Selector.hpp"
 
 pos killerAlpha[10];
 pos killerBeta[10];
@@ -31,63 +32,68 @@ void Game::rankMoves()
 				}
 }
 
-bool	Game::tryMove(int depth, char c, pos test,
-int *ret, bool last)
-{	
+Selector::Selector() {}
 
-	if (!move(test))
+Selector::Selector(Game *game, char c, int md)
+: game(game), c(c), out({-1, -1}), maxDepth(md) {}
+
+Selector::~Selector() {}
+
+bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
+{	
+	if (!game->move(test))
 		return false;
-	Game *t = nxs[test];
-	int tmp = t->minimax(depth + 1, c, last);
-	if ((turn != c && tmp < *ret) || (turn == c && tmp > *ret))
+	Game *save = game;
+	game = game->nxs[test];
+
+	int tmp = minimax(depth + 1, last);
+	game = save;
+	if ((game->turn != c && tmp < *ret) || (game->turn == c && tmp > *ret))
 	{
 		*ret = tmp;
 		if (depth == 0)
-			nxMove = test;
-		if (turn == c)
+			out = test;
+		if (game->turn == c)
 		{
-			alpha = max(alpha, *ret);
+			game->alpha = max(game->alpha, *ret);
 			killerAlpha[depth] = test;
-			if (alpha >= beta){
+			if (game->alpha >= game->beta)
 				return true;
-			}
 		}
 		else
 		{
-			beta = min(beta, *ret);
+			game->beta = min(game->beta, *ret);
 			killerBeta[depth] = test;
-			if (alpha >= beta){
-
+			if (game->alpha >= game->beta)
 				return true;
-			}
 		}
 	}
 	return false;
 }
 
-int Game::minimax(int depth, char c, bool last)
+int Selector::minimax(int depth, bool last)
 {
 // static int counter = 0;
 // cout << "Minmax : " << counter << " | " << depth << ", " << c << endl;
 // counter++;
 	int neg = (c == 'b' ? 1 : -1);
-	if (depth >= MAX_DEPTH || won || last)
-		return neg * score / (2 << depth);
+	if (depth >= maxDepth || game->won || last)
+		return neg * game->score / (2 << depth);
 	for (int k = 0; k < 6; k++)
-		if (comp[k])
+		if (game->comp[k])
 			last = true;
-	rankMoves();
-	int ret = (turn != c ? INT_MAX : INT_MIN);
-	if (!board[killerAlpha[depth].y][killerAlpha[depth].x]
-		&& adjacent(killerAlpha[depth]))
-		if (tryMove(depth, c, killerAlpha[depth], &ret, last))
+	game->rankMoves();
+	int ret = (game->turn != c ? INT_MAX : INT_MIN);
+	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
+		&& game->adjacent(killerAlpha[depth]))
+		if (tryMove(&ret, depth, killerAlpha[depth], last))
 			return ret;
-	if (!board[killerBeta[depth].y][killerBeta[depth].x]
-		&& adjacent(killerBeta[depth]))
-		if (tryMove(depth, c, killerBeta[depth], &ret, last))
+	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
+		&& game->adjacent(killerBeta[depth]))
+		if (tryMove(&ret, depth, killerBeta[depth], last))
 			return ret;
-	for (int i = 0; i < CUTOFF && i < moves.size(); i++)
-		if (tryMove(depth, c, moves[i], &ret, last))
+	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
+		if (tryMove(&ret, depth, game->moves[i], last))
 			return ret;
 	return ret;
 }

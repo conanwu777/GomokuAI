@@ -1,4 +1,5 @@
 #include "Display.hpp"
+#include "Selector.hpp"
 
 void	Display::printTime()
 {
@@ -89,9 +90,8 @@ void Display::updateTime(char color, float time)
 
 void Display::printNumber(int num, int x, int y, bool b, float scale)
 {
-	while(num >= 100){
+	while(num >= 100)
 		num /= 10;
-	}
 	SDL_Rect rect = {x, y, (int)(24 * scale), (int)(40 * scale)};
 	SDL_Rect numBox = {0, 0, 30, 50};
 	numBox.x = 30 * (num / 10);
@@ -131,7 +131,7 @@ void    Display::capturedPieces()
     }
 }
 
-Display::Display(Game *g) : game(g)
+Display::Display(Game *g) : game(g), AIPlayed(false)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("Gomoku", SDL_WINDOWPOS_CENTERED,
@@ -178,21 +178,6 @@ Display::~Display()
 	SDL_DestroyRenderer(rend);
 }
 
-// void Display::outputMove()
-// {
-// 	if (game->pv)
-// 	{
-// 		cout << game->pv->nxs.size() << endl;
-// 		for (int i = 0; i < game->pv->moves.size(); i++)
-// 		{
-// 			cout << game->pv->nxs[game->pv->moves[i]]->score << " : "
-// 			<< game->pv->moves[i].x << ", " << game->pv->moves[i].y << endl;
-// 		}
-// 	}
-// 	refresh();
-
-// }
-
 bool	isCapture(Game *g)
 {
 	if (!g->pv)
@@ -204,19 +189,56 @@ bool	isCapture(Game *g)
 
 int		Display::TimerThread(void* param)
 {
-	Display* disp = (Display*) param;
+	Display *disp = (Display*) param;
 	while (1)
 	{
 		SDL_Delay(50);
 		if (!disp->game->trueWon)
-		{
 			disp->updateTime(disp->game->turn, 0.05);
-			disp->refresh();
-		}
+		disp->refresh();
 	}
 }
 
-void		Display::checkClick()
+int		Display::preComp(void* param)
+{
+	Display *disp = (Display*) param;
+	int d = 4;
+	while (1)
+	{
+		cout << guessMv.size() << endl;
+		if (guessMv.size())
+			continue ;
+		char c = disp->game->turn == 'b' ? 'w' : 'b';
+		disp->game->rankMoves();
+		d = 4;
+		disp->AIPlayed = false;
+		cout << "RESET\n";
+		while (d < 361)
+		{
+			cout << "depth : " << d << endl;
+			for (int i = 0; i < disp->game->moves.size() && i < CUTOFF; i++)
+			{
+				Game *ptm = disp->game->move(disp->game->moves[i]);
+				// playerTestMove->minimax(0, c, false, &tmp);
+				Selector sele(ptm, ptm->turn, d);
+				sele.minimax(0, false);
+				if (disp->AIPlayed)
+					break;
+				guessMv[disp->game->moves[i]] = sele.out;
+				
+			}
+			if (disp->AIPlayed)
+			{
+				guessMv.clear();
+				break;
+			}
+			d += 2;
+		}
+
+	}
+}
+
+void	Display::checkClick()
 {
 	if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
@@ -239,19 +261,17 @@ void		Display::checkClick()
 // cout << "mult : " << mult_b << ", " << mult_w << endl;
 		game->freeGames(p, true);
 		game = nxGame;
-		if (game->turn == 'w'){
+		if (game->turn == 'w')
 			bzero(&whiteTime, sizeof(whiteTime));
-		}
-		else{
+		else
 			bzero(&blackTime, sizeof(blackTime));
-		}
 
 		if (game->trueWon)
-			winTrigger();
+			takeInput = false;
 	}
 }
 
-bool		Display::isAITurn()
+bool	Display::isAITurn()
 {
 	if (game->turn == 'b' && b)
 		return true;
@@ -260,7 +280,7 @@ bool		Display::isAITurn()
 	return false;
 }
 
-void		Display::checkHist()
+void	Display::checkHist()
 {
 	if (event.type != SDL_KEYUP)
 		return ;
@@ -303,21 +323,13 @@ void	Display::checkHint()
 		cout << "Invalid move\n";
 	else
 		game = nextGame;
-	refresh();
 	usleep(500000);
 	game = game->pv;
-	refresh();
 	b = tb;
 	w = tw;
 }
 
-void	Display::winTrigger()
-{
-	takeInput = false;
-	refresh();
-}
-
-void		Display::run()
+void	Display::run()
 {
 	if (b)
 	{
@@ -329,6 +341,8 @@ void		Display::run()
 
 	SDL_Thread *thread;
  	thread = SDL_CreateThread(Display::TimerThread, "time", (void *)this);
+ 	SDL_DetachThread(thread);
+ 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void *)this);
  	SDL_DetachThread(thread);
 	while (1)
 	{
@@ -347,7 +361,7 @@ void		Display::run()
 			checkHist();
 		}
 		if (game->trueWon)
-			winTrigger();
+			takeInput = false;
 		else
 			takeInput = true;
 		if (takeInput && isAITurn())
@@ -355,13 +369,13 @@ void		Display::run()
 			Game *nextGame = game->aiMove();
 			game->freeGames(nextGame->lastMv, true);
 			game = nextGame;
-			if (game->turn == 'w'){
+			if (game->turn == 'w')
 				bzero(&whiteTime, sizeof(whiteTime));
-			}
-			else{
+			else
 				bzero(&blackTime, sizeof(blackTime));
-			}
-cout << endl << endl;
+			guessMv.clear();
+			AIPlayed = true;
+// cout << endl << endl;
 		}
 	}
 }

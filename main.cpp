@@ -6,6 +6,8 @@ bool b;
 bool w;
 float mult_b = 1;
 float mult_w = 1;
+unordered_map<pos, pos, Hash> guessMv;
+
 
 int main (int ac, char **av)
 {
