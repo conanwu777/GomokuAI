@@ -4,7 +4,7 @@ SRC = *.cpp
 
 OBJ = $(SRC:.cpp=.o)
 
-FRAMEWORKS = -framework OpenGl
+FRAMEWORKS = -framework OpenGl -fsanitize=address
 
 GREEN = \033[1;38;2;0;175;117m
 RED = \033[1;38;2;225;20;20m

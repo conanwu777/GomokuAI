@@ -38,6 +38,7 @@ Game::~Game() {}
 
 void Game::getScore()
 {
+
 	if (trueWon)
 	{
 		score = (won == 'b' ? 30000000 : -30000000);
@@ -64,15 +65,15 @@ void Game::getScore()
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
 	ret += 1000 * comp[6] - 1000 * comp[7];
 	if (cap_b)
-		ret += 20000 + 6000 * (cap_b * cap_b);
+		ret += 30000 + 9000 * (cap_b * cap_b);
 	if (cap_w)
-		ret -= 20000 + 6000 * (cap_w * cap_w);
+		ret -= 30000 + 9000 * (cap_w * cap_w);
 	score = ret;
 
-// cout << "getting score (" << lastMv.x << ", " << lastMv.y << ") : " << endl;
-// cout << comp[0] << ", " << comp[1] << " | " << comp[2] << ", " << comp[3] <<
-// " | " << comp[4] << ", " << comp[5] << " | " << comp[6] << ", " << comp[7] << endl;
-// cout << cap_b << "," << cap_w << " | " << score << endl;
+// 	cout << "getting score (" << lastMv.x << ", " << lastMv.y << ") : " << endl;
+// 	cout << comp[0] << ", " << comp[1] << " | " << comp[2] << ", " << comp[3] <<
+// 	" | " << comp[4] << ", " << comp[5] << " | " << comp[6] << ", " << comp[7] << endl;
+// 	cout << cap_b << "," << cap_w << " | " << score << endl;
 
 }
 
@@ -118,14 +119,26 @@ Game *Game::move(pos p)
 Game *Game::aiMove()
 {
 	if (guessMv.find(lastMv) != guessMv.end())
+	{
+cout << "AI finish 1\n";
 		return move(guessMv[lastMv]);
-	cout << "RUNNING MOVE\n";
+	}
+	while (threadWorking == lastMv)
+		;
+	if (guessMv.find(lastMv) != guessMv.end())
+	{
+cout << "AI finish 2\n";
+		return move(guessMv[lastMv]);
+	}
+	mtx.lock();
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	// pos bestMove;
 	Selector sele(this, turn, MAX_DEPTH);
+cout << "aimove\n";
 	sele.minimax(0, false);
 	Game *ret = move(sele.out);
+	mtx.unlock();
+cout << "AI finish 3\n";
 	return ret;
 }
 

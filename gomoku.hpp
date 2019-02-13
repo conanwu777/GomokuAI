@@ -8,7 +8,6 @@
 # include <unordered_map>
 # include "Pos.hpp"
 
-
 # define MAX_DEPTH 4
 # define CUTOFF 15
 
@@ -31,5 +30,7 @@ extern bool b;
 extern bool w;
 extern float mult_b;
 extern float mult_w;
+extern pos threadWorking;
+extern mutex mtx;
 
 #endif

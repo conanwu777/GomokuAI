@@ -1,6 +1,9 @@
 #include "Display.hpp"
 #include "Selector.hpp"
 
+pos threadWorking;
+mutex mtx;
+
 void	Display::printTime()
 {
 	printNumber(blackTime.min, 84, 335, 0, 0.7);
@@ -205,36 +208,41 @@ int		Display::preComp(void* param)
 	int d = 4;
 	while (1)
 	{
-		cout << guessMv.size() << endl;
+		while (disp->game->trueWon)
+			;
 		if (guessMv.size())
 			continue ;
 		char c = disp->game->turn == 'b' ? 'w' : 'b';
 		disp->game->rankMoves();
 		d = 4;
 		disp->AIPlayed = false;
-		cout << "RESET\n";
 		while (d < 361)
 		{
-			cout << "depth : " << d << endl;
+cout << "depth : " << d << endl;
 			for (int i = 0; i < disp->game->moves.size() && i < CUTOFF; i++)
 			{
+cout << disp->game->moves[i].x << " , " << disp->game->moves[i].y << endl;
 				Game *ptm = disp->game->move(disp->game->moves[i]);
-				// playerTestMove->minimax(0, c, false, &tmp);
 				Selector sele(ptm, ptm->turn, d);
+				threadWorking = disp->game->moves[i];
+				mtx.lock();
+cout << "thread\n";
 				sele.minimax(0, false);
-				if (disp->AIPlayed)
+				mtx.unlock();
+				if (disp->AIPlayed || disp->game->trueWon)
 					break;
 				guessMv[disp->game->moves[i]] = sele.out;
-				
 			}
-			if (disp->AIPlayed)
+			threadWorking = {-1, -1};
+			if (disp->AIPlayed || disp->game->trueWon)
 			{
 				guessMv.clear();
 				break;
 			}
 			d += 2;
 		}
-
+		while (!disp->AIPlayed && !disp->game->trueWon)
+			;
 	}
 }
 
@@ -254,6 +262,7 @@ void	Display::checkClick()
 		while (forward.size())
 			forward.pop();
 		game->rankMoves();
+
 		if (game->moves.size() && isCapture(game->nxs[game->moves[0]]))
 			(game->turn == 'b' ? mult_b : mult_w) *= 0.9;
 		if (game->moves.size() && isCapture(nxGame))
@@ -261,6 +270,7 @@ void	Display::checkClick()
 // cout << "mult : " << mult_b << ", " << mult_w << endl;
 		game->freeGames(p, true);
 		game = nxGame;
+
 		if (game->turn == 'w')
 			bzero(&whiteTime, sizeof(whiteTime));
 		else
@@ -338,17 +348,15 @@ void	Display::run()
 	}
 	refresh();
 	game->rankMoves();
-
 	SDL_Thread *thread;
- 	thread = SDL_CreateThread(Display::TimerThread, "time", (void *)this);
+ 	thread = SDL_CreateThread(Display::TimerThread, "time", (void*)this);
  	SDL_DetachThread(thread);
- 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void *)this);
+ 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
  	SDL_DetachThread(thread);
 	while (1)
 	{
 		if (SDL_PollEvent(&event))
 		{
-//this should be in a separate thread
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
 				&& event.key.keysym.sym == SDLK_ESCAPE))
 			{	
@@ -367,15 +375,15 @@ void	Display::run()
 		if (takeInput && isAITurn())
 		{
 			Game *nextGame = game->aiMove();
-			game->freeGames(nextGame->lastMv, true);
 			game = nextGame;
 			if (game->turn == 'w')
 				bzero(&whiteTime, sizeof(whiteTime));
 			else
 				bzero(&blackTime, sizeof(blackTime));
-			guessMv.clear();
 			AIPlayed = true;
-// cout << endl << endl;
+			guessMv.clear();
+			game->pv->freeGames(game->lastMv, true);
+cout << endl << endl;
 		}
 	}
 }

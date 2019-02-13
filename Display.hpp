@@ -5,6 +5,7 @@
 # include "Game.hpp"
 # include <stack>
 # include <SDL2/SDL.h>
+# include <mutex>
 
 # define W 1600
 # define H 1000
@@ -29,7 +30,6 @@ class Display {
 	SDL_Texture* blackWin;
 	SDL_Texture* whiteWin;
 	Game *game;
-
 	bool takeInput = true;
 	bool AIPlayed;
 	Display();

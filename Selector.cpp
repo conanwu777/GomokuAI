@@ -73,12 +73,9 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 
 int Selector::minimax(int depth, bool last)
 {
-// static int counter = 0;
-// cout << "Minmax : " << counter << " | " << depth << ", " << c << endl;
-// counter++;
 	int neg = (c == 'b' ? 1 : -1);
-	if (depth >= maxDepth || game->won || last)
-		return neg * game->score / (2 << depth);
+	if (depth >= maxDepth || game->trueWon || last)
+		return neg * game->score;
 	for (int k = 0; k < 6; k++)
 		if (game->comp[k])
 			last = true;
@@ -87,13 +84,13 @@ int Selector::minimax(int depth, bool last)
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))
 		if (tryMove(&ret, depth, killerAlpha[depth], last))
-			return ret;
+			return (ret >> 1) + neg * game->score;
 	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
 		&& game->adjacent(killerBeta[depth]))
 		if (tryMove(&ret, depth, killerBeta[depth], last))
-			return ret;
+			return (ret >> 1) + neg * game->score;
 	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
 		if (tryMove(&ret, depth, game->moves[i], last))
-			return ret;
-	return ret;
+			return (ret >> 1) + neg * game->score;
+	return (ret >> 1) + neg * game->score;
 }
