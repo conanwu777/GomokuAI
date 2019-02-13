@@ -65,9 +65,9 @@ void Game::getScore()
 	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
 	ret += 1000 * comp[6] - 1000 * comp[7];
 	if (cap_b)
-		ret += 30000 + 9000 * (cap_b * cap_b);
+		ret += 30000 + 9000 * (cap_b * cap_b) * mult_b;
 	if (cap_w)
-		ret -= 30000 + 9000 * (cap_w * cap_w);
+		ret -= 30000 + 9000 * (cap_w * cap_w) * mult_w;
 	score = ret;
 }
 
@@ -124,12 +124,12 @@ Game *Game::aiMove()
 
 void Game::freeGames(pos p, bool b)
 {
-	// for (auto it = nxs.begin(); it != nxs.end(); it++)
-	// {
-	// 	if (b && it->first == p)
-	// 		continue ;
-	// 	it->second->freeGames(p, false);
-	// 	delete it->second;
-	// 	nxs.erase(it);
-	// }
+	for (auto it = nxs.begin(); it != nxs.end(); it++)
+	{
+		if (b && it->first == p)
+			continue ;
+		it->second->freeGames(p, false);
+		delete it->second;
+		nxs.erase(it);
+	}
 }

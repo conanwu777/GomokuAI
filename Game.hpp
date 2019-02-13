@@ -41,9 +41,6 @@ public:
 	void getScore();
 
 	void rankMoves();
-	// int	minimax(int depth, char c, bool last, pos*);
-	// bool tryMove(int depth, char c, pos test, int *ret, bool last, pos*);
-
 	void freeGames(pos p, bool b);
 };
 

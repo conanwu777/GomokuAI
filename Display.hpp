@@ -31,7 +31,6 @@ class Display {
 	SDL_Texture* whiteWin;
 	Game *game;
 	bool takeInput = true;
-	bool AIPlayed;
 	Display();
 
 public:

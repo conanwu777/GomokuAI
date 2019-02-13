@@ -9,7 +9,8 @@
 # include "Pos.hpp"
 
 # define MAX_DEPTH 4
-# define CUTOFF 15
+# define CUTOFF 20
+# define GUESSNUM 10
 
 using namespace std;
 
@@ -31,5 +32,6 @@ extern bool w;
 extern float mult_b;
 extern float mult_w;
 extern mutex mtx;
+extern bool mutexRequested;
 
 #endif

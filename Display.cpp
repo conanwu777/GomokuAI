@@ -3,6 +3,7 @@
 
 pos threadWorking;
 mutex mtx;
+bool mutexRequested;
 
 void	Display::printTime()
 {
@@ -134,7 +135,7 @@ void    Display::capturedPieces()
     }
 }
 
-Display::Display(Game *g) : game(g), AIPlayed(false)
+Display::Display(Game *g) : game(g)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	win = SDL_CreateWindow("Gomoku", SDL_WINDOWPOS_CENTERED,
@@ -206,50 +207,38 @@ int		Display::preComp(void* param)
 {
 	Display *disp = (Display*) param;
 	int d = 4;
-	bool stop = false;
 	while (1)
 	{
-		while (disp->game->trueWon)
+		while (disp->game->trueWon || mutexRequested)
 			;
 		mtx.lock();
-		mtx.unlock();
-		stop = false;
-		if (guessMv.size())
+		if (disp->game->trueWon){
+			mtx.unlock();
 			continue ;
-		char c = disp->game->turn == 'b' ? 'w' : 'b';
+		}
 		disp->game->rankMoves();
+		guessMv.clear();
 		d = 4;
-		disp->AIPlayed = false;
-		while (d < 361)
+		while (d <= 20)
 		{
-// cout << "depth : " << d << endl;
-			for (int i = 0; i < disp->game->moves.size() && i < CUTOFF; i++)
+cout << "depth : " << d << endl;
+			for (int i = 0; i < disp->game->moves.size() && i < GUESSNUM; i++)
 			{
-				if (!mtx.try_lock()){
-					stop = true;
-					break;
-				}
 				Game *ptm = disp->game->move(disp->game->moves[i]);
 				Selector sele(ptm, ptm->turn, d);
 				sele.minimax(0, false, 'p');
-				if (disp->AIPlayed || disp->game->trueWon)
-				{
-					mtx.unlock();
+				if (disp->game->trueWon || mutexRequested)
 					break;
-				}
 				if (disp->game->moves.size() != 0)
 					guessMv[disp->game->moves[i]] = sele.out;
-				mtx.unlock();
 			}
-			if (disp->AIPlayed || disp->game->trueWon || stop)
-			{
-				guessMv.clear();
+			if (disp->game->trueWon || mutexRequested)
 				break;
-			}
 			d += 2;
 		}
-		while (!disp->AIPlayed && !disp->game->trueWon)
+		while (!disp->game->trueWon && !mutexRequested)
 			;
+		mtx.unlock();
 	}
 }
 
@@ -269,14 +258,22 @@ void	Display::checkClick()
 		while (forward.size())
 			forward.pop();
 		game->rankMoves();
-
 		if (game->moves.size() && isCapture(game->nxs[game->moves[0]]))
-			(game->turn == 'b' ? mult_b : mult_w) *= 0.9;
+			(game->turn == 'b' ? mult_b : mult_w) *= 0.98;
 		if (game->moves.size() && isCapture(nxGame))
-			(game->turn == 'b' ? mult_b : mult_w) /= 0.9;
+			(game->turn == 'b' ? mult_b : mult_w) /= 0.98;
 // cout << "mult : " << mult_b << ", " << mult_w << endl;
+ 		mutexRequested = true;
+		mtx.lock();
+
 		game->freeGames(p, true);
 		game = nxGame;
+
+		if ((game->turn == 'b' ? b : w) == false)
+		{
+			mtx.unlock();
+			mutexRequested = false;
+		}
 
 	cout << "getting score (" << game->lastMv.x << ", " << game->lastMv.y << ") : " << endl;
 	cout << game->comp[0] << ", " << game->comp[1] << " | " << game->comp[2] << ", " << game->comp[3] <<
@@ -309,6 +306,8 @@ void	Display::checkHist()
 		return ;
 	if (event.key.keysym.sym == SDLK_LEFT && game->pv)
 	{
+		mutexRequested = true;
+		mtx.lock();
 		forward.push(game);
 		game = game->pv;
 		while (game->pv && isAITurn())
@@ -318,9 +317,13 @@ void	Display::checkHist()
 		}
 		bzero(&whiteTime, sizeof(whiteTime));
 		bzero(&blackTime, sizeof(blackTime));
+		mtx.unlock();
+		mutexRequested = false;
 	}
 	if (event.key.keysym.sym == SDLK_RIGHT && forward.size())
 	{
+		mutexRequested = true;
+		mtx.lock();
 		game = forward.top();
 		forward.pop();
 		while (forward.size() && isAITurn())
@@ -330,6 +333,8 @@ void	Display::checkHist()
 		}
 		bzero(&whiteTime, sizeof(whiteTime));
 		bzero(&blackTime, sizeof(blackTime));
+		mtx.unlock();
+		mutexRequested = false;
 	}
 }
 
@@ -341,6 +346,8 @@ void	Display::checkHint()
 	bool tw = w;
 	b = true;
 	w = true;
+	mutexRequested = true;
+	mtx.lock();
 	Game *nextGame = game->aiMove();
 	if (nextGame == NULL)
 		cout << "Invalid move\n";
@@ -348,6 +355,8 @@ void	Display::checkHint()
 		game = nextGame;
 	usleep(500000);
 	game = game->pv;
+	mtx.unlock();
+	mutexRequested = false;
 	b = tb;
 	w = tw;
 }
@@ -364,8 +373,11 @@ void	Display::run()
 	SDL_Thread *thread;
  	thread = SDL_CreateThread(Display::TimerThread, "time", (void*)this);
  	SDL_DetachThread(thread);
- 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
- 	SDL_DetachThread(thread);
+ 	if (!b || !w)
+ 	{
+ 		thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
+ 		SDL_DetachThread(thread);
+ 	}
 	while (1)
 	{
 		if (SDL_PollEvent(&event))
@@ -382,23 +394,32 @@ void	Display::run()
 			checkHist();
 		}
 		if (game->trueWon)
+		{
+			mtx.unlock();
+			mutexRequested = false;
 			takeInput = false;
+		}
 		else
 			takeInput = true;
 		if (takeInput && isAITurn())
 		{
-			mtx.lock();
 			Game *nextGame = game->aiMove();
-			mtx.unlock();
+			
 			game = nextGame;
+
+			if (!isAITurn())
+			{
+				mtx.unlock();
+				mutexRequested = false;
+			}
+
 			if (game->turn == 'w')
 				bzero(&whiteTime, sizeof(whiteTime));
 			else
 				bzero(&blackTime, sizeof(blackTime));
-			AIPlayed = true;
-			guessMv.clear();
 			game->pv->freeGames(game->lastMv, true);
-cout << endl << endl;
+			if (b & w)
+				usleep(500000);
 		}
 	}
 }

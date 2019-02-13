@@ -42,6 +42,9 @@ Selector::~Selector() {}
 
 bool	Selector::tryMove(int* ret, int depth, pos test, bool last, char th)
 {	
+	if (th == 'p' && mutexRequested){
+		return 0;
+	}
 	if (!game->move(test))
 		return false;
 	Game *save = game;
@@ -75,6 +78,9 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last, char th)
 int Selector::minimax(int depth, bool last, char th)
 {
 	// cout << th << " depth : " << depth << endl;
+	if (th == 'p' && mutexRequested){
+		return 0;
+	}
 	int neg = (c == 'b' ? 1 : -1);
 	if (depth >= maxDepth || game->trueWon || last)
 		return neg * game->score;
