@@ -11,8 +11,8 @@ public:
 	Selector();
 	Selector(Game *game, char c, int maxDepth);
 	~Selector();
-	bool	tryMove(int *ret, int depth, pos test, bool last);
-	int		minimax(int depth, bool last);
+	bool	tryMove(int *ret, int depth, pos test, bool last, char th);
+	int		minimax(int depth, bool last, char th);
 
 };
 

@@ -13,13 +13,14 @@ void Game::rankMoves()
 		return ;
 	pos iter;
 	for (iter.y = 0; iter.y < 19; iter.y++)
-		for (iter.x = 0; iter.x < 19; iter.x++)
+		for (iter.x = 0; iter.x < 19; iter.x++){
 			if (!board[iter.y][iter.x] && adjacent(iter))
 			{
 				if (!move(iter))
 					continue ;
 				moves.push_back(iter);
 			}
+		}
 	int neg = (turn == 'w' ? -1 : 1);
 	if (moves.size())
 		for (int i = 0; i < moves.size() - 1; i++)
@@ -39,14 +40,14 @@ Selector::Selector(Game *game, char c, int md)
 
 Selector::~Selector() {}
 
-bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
+bool	Selector::tryMove(int* ret, int depth, pos test, bool last, char th)
 {	
 	if (!game->move(test))
 		return false;
 	Game *save = game;
 	game = game->nxs[test];
 
-	int tmp = minimax(depth + 1, last);
+	int tmp = minimax(depth + 1, last, th);
 	game = save;
 	if ((game->turn != c && tmp < *ret) || (game->turn == c && tmp > *ret))
 	{
@@ -71,26 +72,28 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 	return false;
 }
 
-int Selector::minimax(int depth, bool last)
+int Selector::minimax(int depth, bool last, char th)
 {
+	// cout << th << " depth : " << depth << endl;
 	int neg = (c == 'b' ? 1 : -1);
 	if (depth >= maxDepth || game->trueWon || last)
 		return neg * game->score;
 	for (int k = 0; k < 6; k++)
 		if (game->comp[k])
 			last = true;
-	game->rankMoves();
+	if (game->moves.size() == 0)
+		game->rankMoves();
 	int ret = (game->turn != c ? INT_MAX : INT_MIN);
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))
-		if (tryMove(&ret, depth, killerAlpha[depth], last))
+		if (tryMove(&ret, depth, killerAlpha[depth], last, th))
 			return (ret >> 1) + neg * game->score;
 	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
 		&& game->adjacent(killerBeta[depth]))
-		if (tryMove(&ret, depth, killerBeta[depth], last))
+		if (tryMove(&ret, depth, killerBeta[depth], last, th))
 			return (ret >> 1) + neg * game->score;
 	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
-		if (tryMove(&ret, depth, game->moves[i], last))
+		if (tryMove(&ret, depth, game->moves[i], last, th))
 			return (ret >> 1) + neg * game->score;
 	return (ret >> 1) + neg * game->score;
 }

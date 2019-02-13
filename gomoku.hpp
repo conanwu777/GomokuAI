@@ -30,7 +30,6 @@ extern bool b;
 extern bool w;
 extern float mult_b;
 extern float mult_w;
-extern pos threadWorking;
 extern mutex mtx;
 
 #endif

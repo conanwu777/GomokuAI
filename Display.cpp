@@ -206,10 +206,14 @@ int		Display::preComp(void* param)
 {
 	Display *disp = (Display*) param;
 	int d = 4;
+	bool stop = false;
 	while (1)
 	{
 		while (disp->game->trueWon)
 			;
+		mtx.lock();
+		mtx.unlock();
+		stop = false;
 		if (guessMv.size())
 			continue ;
 		char c = disp->game->turn == 'b' ? 'w' : 'b';
@@ -218,23 +222,26 @@ int		Display::preComp(void* param)
 		disp->AIPlayed = false;
 		while (d < 361)
 		{
-cout << "depth : " << d << endl;
+// cout << "depth : " << d << endl;
 			for (int i = 0; i < disp->game->moves.size() && i < CUTOFF; i++)
 			{
-cout << disp->game->moves[i].x << " , " << disp->game->moves[i].y << endl;
+				if (!mtx.try_lock()){
+					stop = true;
+					break;
+				}
 				Game *ptm = disp->game->move(disp->game->moves[i]);
 				Selector sele(ptm, ptm->turn, d);
-				threadWorking = disp->game->moves[i];
-				mtx.lock();
-cout << "thread\n";
-				sele.minimax(0, false);
-				mtx.unlock();
+				sele.minimax(0, false, 'p');
 				if (disp->AIPlayed || disp->game->trueWon)
+				{
+					mtx.unlock();
 					break;
-				guessMv[disp->game->moves[i]] = sele.out;
+				}
+				if (disp->game->moves.size() != 0)
+					guessMv[disp->game->moves[i]] = sele.out;
+				mtx.unlock();
 			}
-			threadWorking = {-1, -1};
-			if (disp->AIPlayed || disp->game->trueWon)
+			if (disp->AIPlayed || disp->game->trueWon || stop)
 			{
 				guessMv.clear();
 				break;
@@ -270,6 +277,12 @@ void	Display::checkClick()
 // cout << "mult : " << mult_b << ", " << mult_w << endl;
 		game->freeGames(p, true);
 		game = nxGame;
+
+	cout << "getting score (" << game->lastMv.x << ", " << game->lastMv.y << ") : " << endl;
+	cout << game->comp[0] << ", " << game->comp[1] << " | " << game->comp[2] << ", " << game->comp[3] <<
+	" | " << game->comp[4] << ", " << game->comp[5] << " | " << game->comp[6] << ", " << game->comp[7] << endl;
+	cout << game->cap_b << "," << game->cap_w << " | " << game->score << endl;
+
 
 		if (game->turn == 'w')
 			bzero(&whiteTime, sizeof(whiteTime));
@@ -374,7 +387,9 @@ void	Display::run()
 			takeInput = true;
 		if (takeInput && isAITurn())
 		{
+			mtx.lock();
 			Game *nextGame = game->aiMove();
+			mtx.unlock();
 			game = nextGame;
 			if (game->turn == 'w')
 				bzero(&whiteTime, sizeof(whiteTime));
