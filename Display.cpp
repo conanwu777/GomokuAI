@@ -4,6 +4,7 @@
 pos threadWorking;
 mutex mtx;
 bool mutexRequested;
+int searched = 4;
 
 void	Display::printTime()
 {
@@ -66,7 +67,6 @@ void Display::addTime(timeFrame *frame, float time)
 	frame->min += (int)time / 60;
 	frame->sec += (int)time % 60;
 	frame->milli += (time - (int)time) * 100;
-
 	if (frame->milli >= 100)
 	{
 		frame->sec++;
@@ -83,11 +83,9 @@ void Display::updateTime(char color, float time)
 {
 	timeFrame *frame;
 	timeFrame *totalFrame;
-
 	frame = (color == 'b' ? &blackTime : &whiteTime);
 	totalFrame = (color == 'b' ?
 		&blackTotalTime : &whiteTotalTime);
-
 	addTime(frame, time);
 	addTime(totalFrame, time);
 }
@@ -205,28 +203,27 @@ int		Display::TimerThread(void* param)
 
 int		Display::preComp(void* param)
 {
-	Display *disp = (Display*) param;
-	int d = 4;
+	Display *disp = (Display*)param;
 	while (1)
 	{
 		while (disp->game->trueWon || mutexRequested)
 			;
 		mtx.lock();
-		if (disp->game->trueWon){
+		if (disp->game->trueWon)
+		{
 			mtx.unlock();
 			continue ;
 		}
 		disp->game->rankMoves();
 		guessMv.clear();
-		d = 4;
-		while (d <= 20)
+		searched = 4;
+		while (searched < 20)
 		{
-cout << "depth : " << d << endl;
 			for (int i = 0; i < disp->game->moves.size() && i < GUESSNUM; i++)
 			{
 				Game *ptm = disp->game->move(disp->game->moves[i]);
-				Selector sele(ptm, ptm->turn, d);
-				sele.minimax(0, false, 'p');
+				Selector sele(ptm, ptm->turn, 'p', searched);
+				sele.minimax(0, false);
 				if (disp->game->trueWon || mutexRequested)
 					break;
 				if (disp->game->moves.size() != 0)
@@ -234,7 +231,7 @@ cout << "depth : " << d << endl;
 			}
 			if (disp->game->trueWon || mutexRequested)
 				break;
-			d += 2;
+			searched += 2;
 		}
 		while (!disp->game->trueWon && !mutexRequested)
 			;
@@ -244,6 +241,8 @@ cout << "depth : " << d << endl;
 
 void	Display::checkClick()
 {
+	if (isAITurn() || !takeInput)
+		return ;
 	if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
 		pos p;
@@ -252,7 +251,7 @@ void	Display::checkClick()
 		Game *nxGame = game->move(p);
 		if (!nxGame)
 		{
-			cout << "Invalid move\n";
+			cout << RED << "Invalid move\n";
 			return ;
 		}
 		while (forward.size())
@@ -262,30 +261,20 @@ void	Display::checkClick()
 			(game->turn == 'b' ? mult_b : mult_w) *= 0.98;
 		if (game->moves.size() && isCapture(nxGame))
 			(game->turn == 'b' ? mult_b : mult_w) /= 0.98;
-// cout << "mult : " << mult_b << ", " << mult_w << endl;
  		mutexRequested = true;
 		mtx.lock();
-
 		game->freeGames(p, true);
 		game = nxGame;
-
+		printOut();
 		if ((game->turn == 'b' ? b : w) == false)
 		{
 			mtx.unlock();
 			mutexRequested = false;
 		}
-
-	cout << "getting score (" << game->lastMv.x << ", " << game->lastMv.y << ") : " << endl;
-	cout << game->comp[0] << ", " << game->comp[1] << " | " << game->comp[2] << ", " << game->comp[3] <<
-	" | " << game->comp[4] << ", " << game->comp[5] << " | " << game->comp[6] << ", " << game->comp[7] << endl;
-	cout << game->cap_b << "," << game->cap_w << " | " << game->score << endl;
-
-
 		if (game->turn == 'w')
 			bzero(&whiteTime, sizeof(whiteTime));
 		else
 			bzero(&blackTime, sizeof(blackTime));
-
 		if (game->trueWon)
 			takeInput = false;
 	}
@@ -361,6 +350,39 @@ void	Display::checkHint()
 	w = tw;
 }
 
+void Display::printOut()
+{
+	cout << ORANGE << (isAITurn() || (!b && !w) ? "Player " : "AI ") <<
+		(game->turn == 'b' ? WHITE : GREY) << "(" <<
+		game->lastMv.x << ", " << game->lastMv.y << ")" << endl;
+
+	cout << YELLO << "Free 4s : " << GREY << game->comp[0] << YELLO << " | "
+		<< WHITE << game->comp[1] << endl;
+	cout << YELLO << "Half-open 4s : " << GREY << game->comp[2] << YELLO << " | "
+		<< WHITE << game->comp[3] << endl;
+	cout << YELLO << "Free 3s : " << GREY << game->comp[4] << YELLO << " | "
+		<< WHITE << game->comp[5] << endl;
+	cout << YELLO << "Free 2s / Half-open 3s : " << GREY << game->comp[6] << YELLO << " | "
+		<< WHITE << game->comp[7] << endl;
+	cout << YELLO << "Captures : " << GREY << game->cap_b << YELLO << " | "
+		<< WHITE << game->cap_w << endl;
+	cout << YELLO << "Current score (in black's favor): "
+		<< GREY << game->score_b << endl << endl;
+}
+
+void	Display::processInputs()
+{
+	if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
+		&& event.key.keysym.sym == SDLK_ESCAPE))
+	{	
+		game->freeGames({0, 0}, false);
+		exit (1);
+	}
+	checkClick();
+	checkHint();
+	checkHist();
+}
+
 void	Display::run()
 {
 	if (b)
@@ -375,24 +397,13 @@ void	Display::run()
  	SDL_DetachThread(thread);
  	if (!b || !w)
  	{
- 		thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
- 		SDL_DetachThread(thread);
+ 		// thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
+ 		// SDL_DetachThread(thread);
  	}
 	while (1)
 	{
 		if (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN
-				&& event.key.keysym.sym == SDLK_ESCAPE))
-			{	
-				game->freeGames({0, 0}, false);
-				exit (1);
-			}
-			if (!isAITurn() && takeInput)
-				checkClick();
-			checkHint();
-			checkHist();
-		}
+			processInputs();
 		if (game->trueWon)
 		{
 			mtx.unlock();
@@ -404,15 +415,13 @@ void	Display::run()
 		if (takeInput && isAITurn())
 		{
 			Game *nextGame = game->aiMove();
-			
 			game = nextGame;
-
 			if (!isAITurn())
 			{
 				mtx.unlock();
 				mutexRequested = false;
 			}
-
+			printOut();
 			if (game->turn == 'w')
 				bzero(&whiteTime, sizeof(whiteTime));
 			else

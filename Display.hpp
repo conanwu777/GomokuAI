@@ -49,6 +49,8 @@ public:
 	void	checkHint();
 	void	capturedPieces();
 	bool	isAITurn();
+	void 	printOut();
+	void	processInputs();
 	static int	TimerThread(void* param);
 	static int	preComp(void* param);
 

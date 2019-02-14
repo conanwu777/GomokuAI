@@ -5,14 +5,15 @@ class Selector {
 	Game *game;
 	int maxDepth;
 	char c;
+	char th;
 
 public:
 	pos out;
 	Selector();
-	Selector(Game *game, char c, int maxDepth);
+	Selector(Game *game, char c, char th, int maxDepth);
 	~Selector();
-	bool	tryMove(int *ret, int depth, pos test, bool last, char th);
-	int		minimax(int depth, bool last, char th);
+	bool	tryMove(int *ret, int depth, pos test, bool last);
+	int		minimax(int depth, bool last);
 
 };
 

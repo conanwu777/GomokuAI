@@ -13,19 +13,18 @@ void Game::rankMoves()
 		return ;
 	pos iter;
 	for (iter.y = 0; iter.y < 19; iter.y++)
-		for (iter.x = 0; iter.x < 19; iter.x++){
+		for (iter.x = 0; iter.x < 19; iter.x++)
 			if (!board[iter.y][iter.x] && adjacent(iter))
 			{
 				if (!move(iter))
 					continue ;
 				moves.push_back(iter);
 			}
-		}
-	int neg = (turn == 'w' ? -1 : 1);
 	if (moves.size())
 		for (int i = 0; i < moves.size() - 1; i++)
 			for (int j = i + 1; j < moves.size(); j++)
-				if (neg * nxs[moves[i]]->score < neg * nxs[moves[j]]->score)
+				if ((turn == 'b' ? nxs[moves[i]]->score_b : nxs[moves[i]]->score_w)
+				 < (turn == 'b' ? nxs[moves[j]]->score_b : nxs[moves[j]]->score_w))
 				{
 					pos t = moves[i];
 					moves[i] = moves[j];
@@ -35,22 +34,42 @@ void Game::rankMoves()
 
 Selector::Selector() {}
 
-Selector::Selector(Game *game, char c, int md)
-: game(game), c(c), out({-1, -1}), maxDepth(md) {}
+Selector::Selector(Game *game, char c, char th, int md)
+: game(game), c(c), th(th), out({-1, -1}), maxDepth(md)
+{
+	// cout << RED << "Selector to maxmize " << (c == 'b' ? "Black" : "White") << endl;
+}
 
 Selector::~Selector() {}
 
-bool	Selector::tryMove(int* ret, int depth, pos test, bool last, char th)
+
+// int Selector::minimax()
+// {
+// 	if (th == 'p' && mutexRequested)
+// 		return -1;
+// 	if (game->trueWon)
+// 		return (c == 'b' ? game->score_b : game->score_w);
+// 	if (game->moves.size() == 0)
+// 		game->rankMoves(c);
+// 	depth = 0;
+// 	while (depth <= maxDepth)
+// 	{
+
+// 		depth++;
+// 	}
+
+
+// }
+
+bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 {	
-	if (th == 'p' && mutexRequested){
+	if (th == 'p' && mutexRequested)
 		return 0;
-	}
 	if (!game->move(test))
 		return false;
 	Game *save = game;
 	game = game->nxs[test];
-
-	int tmp = minimax(depth + 1, last, th);
+	int tmp = minimax(depth + 1, last);
 	game = save;
 	if ((game->turn != c && tmp < *ret) || (game->turn == c && tmp > *ret))
 	{
@@ -75,15 +94,14 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last, char th)
 	return false;
 }
 
-int Selector::minimax(int depth, bool last, char th)
+int Selector::minimax(int depth, bool last)
 {
-	// cout << th << " depth : " << depth << endl;
-	if (th == 'p' && mutexRequested){
+	if (th == 'p' && mutexRequested)
 		return 0;
-	}
-	int neg = (c == 'b' ? 1 : -1);
+	int score = (c == 'b' ? game->score_b : game->score_w);
+	cout << game->score_w << " , " << game->score_b << endl;
 	if (depth >= maxDepth || game->trueWon || last)
-		return neg * game->score;
+		return score;
 	for (int k = 0; k < 6; k++)
 		if (game->comp[k])
 			last = true;
@@ -92,14 +110,14 @@ int Selector::minimax(int depth, bool last, char th)
 	int ret = (game->turn != c ? INT_MAX : INT_MIN);
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))
-		if (tryMove(&ret, depth, killerAlpha[depth], last, th))
-			return (ret >> 1) + neg * game->score;
+		if (tryMove(&ret, depth, killerAlpha[depth], last))
+			return (ret << 1) + score;
 	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
 		&& game->adjacent(killerBeta[depth]))
-		if (tryMove(&ret, depth, killerBeta[depth], last, th))
-			return (ret >> 1) + neg * game->score;
+		if (tryMove(&ret, depth, killerBeta[depth], last))
+			return (ret << 1) + score;
 	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
-		if (tryMove(&ret, depth, game->moves[i], last, th))
-			return (ret >> 1) + neg * game->score;
-	return (ret >> 1) + neg * game->score;
+		if (tryMove(&ret, depth, game->moves[i], last))
+			return (ret << 1) + score;
+	return (ret << 1) + score;
 }

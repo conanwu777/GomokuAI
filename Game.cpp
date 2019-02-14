@@ -2,8 +2,8 @@
 #include "Display.hpp"
 #include "Selector.hpp"
 
-Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0),
-alpha(INT_MIN), beta(INT_MAX), score(0), trueWon(0), pv(NULL)
+Game::Game() : turn('b'), won(0), cap_b(0), cap_w(0), pv(NULL),
+alpha(INT_MIN), beta(INT_MAX), score_b(0), score_w(0), trueWon(0)
 {
 	lastMv = {9, 9};
 	for (int i = 0; i < 19; i++)
@@ -18,7 +18,8 @@ Game& Game::operator=(const Game &g)
 	beta = g.beta;
 	turn = g.turn;
 	won = g.won;
-	score = g.score;
+	score_b = g.score_b;
+	score_w = g.score_w;
 	cap_b = g.cap_b;
 	cap_w = g.cap_w;
 	for (int x = 0; x < 19; x++)
@@ -38,37 +39,36 @@ Game::~Game() {}
 
 void Game::getScore()
 {
-
 	if (trueWon)
 	{
-		score = (won == 'b' ? 30000000 : -30000000);
+		score_b = (won == 'b' ? 30000000 : -30000000);
+		score_w = -score_b;
 		return ;
 	}
-	else if (won)
+	if (won)
 	{
-		score = (won == 'b' ? 10000000 : -10000000);
-		return;
+		score_b = (won == 'b' ? 10000000 : -10000000);
+		score_w = -score_b;
+		return ;
 	}
-	int ret = 0;
+	int base_b = 0;
+	int base_w = 0;
 	for (int i = 0; i < 19; i++)
 		for (int j = 0; j < 19; j++)
-		{
 			if (board[i][j] == 'b')
-				ret -= 8 * (abs(i - 9) + abs(j - 9));
+				base_b += 8 * (abs(i - 9) + abs(j - 9));
 			else if (board[i][j])
-				ret += 8 * (abs(i - 9) + abs(j - 9));
-		}
-	int coeb = (turn == 'b' ? 1 : 10);
-	int coew = (turn == 'w' ? 1 : 10);
-	ret += coeb * 1000000 * comp[0] - coew * 1000000 * comp[1];
-	ret += coeb * 200000 * comp[2] - coew * 200000 * comp[3];
-	ret += coeb * 10000 * comp[4] - coew * 10000 * comp[5];
-	ret += 1000 * comp[6] - 1000 * comp[7];
+				base_w += 8 * (abs(i - 9) + abs(j - 9));
+	base_b += 1000000 * comp[0] + 200000 * comp[2]
+		+ 10000 * comp[4] + 1000 * comp[6];
 	if (cap_b)
-		ret += 30000 + 9000 * (cap_b * cap_b) * mult_b;
+		base_b += 30000 + 9000 * (cap_b * cap_b) * mult_b;
+	base_w += 1000000 * comp[1] + 200000 * comp[3]
+		+ 10000 * comp[5] + 1000 * comp[7];
 	if (cap_w)
-		ret -= 30000 + 9000 * (cap_w * cap_w) * mult_w;
-	score = ret;
+		base_w += 30000 + 9000 * (cap_w * cap_w) * mult_w;
+	score_b = base_b - 10 * base_w;
+	score_w = base_w - 10 * base_b;
 }
 
 Game *Game::move(pos p)
@@ -82,7 +82,6 @@ Game *Game::move(pos p)
 	}
 	if (!inBound(p.x, p.y) || board[p.y][p.x])
 		return NULL;
-
 	Game *ret = new Game(*this);
 	ret->board[p.y][p.x] = turn;
 	bool capture = ret->checkCapture(p);
@@ -101,7 +100,6 @@ Game *Game::move(pos p)
 		return NULL;
 	}
 	nxs[p] = ret;
-// cout << lastMv.x << ", " << lastMv.y << " -> " << p.x << ", " << p.y << endl; 
 	ret->nxs.clear();
 	ret->pv = this;
 	ret->lastMv = p;
@@ -113,12 +111,18 @@ Game *Game::move(pos p)
 Game *Game::aiMove()
 {
 	if (guessMv.find(lastMv) != guessMv.end())
+	{
+		cout << YELLO << "Depth searched : " << searched << endl;
 		return move(guessMv[lastMv]);
+	}
 	alpha = INT_MIN;
 	beta = INT_MAX;
-	Selector sele(this, turn, MAX_DEPTH);
-	sele.minimax(0, false, 'a');
+	Selector sele(this, turn, 'a', MAX_DEPTH);
+	// sele.minimax(0, false);
+
+cout << "minimax return : " << sele.minimax(0, false) << endl;
 	Game *ret = move(sele.out);
+	cout << YELLO << "Depth searched : " << MAX_DEPTH << endl;
 	return ret;
 }
 
