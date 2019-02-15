@@ -54,8 +54,8 @@ public:
 	static int	TimerThread(void* param);
 	static int	preComp(void* param);
 
-	timeFrame whiteTime;
-	timeFrame blackTime;
+	static timeFrame whiteTime;
+	static timeFrame blackTime;
 	timeFrame whiteTotalTime;
 	timeFrame blackTotalTime;
 };

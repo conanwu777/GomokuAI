@@ -115,13 +115,24 @@ Game *Game::aiMove()
 		cout << YELLO << "Depth searched : " << searched << endl;
 		return move(guessMv[lastMv]);
 	}
-	cout << RED << "NOtGOODMOVE!!!!\n\n";
-	alpha = INT_MIN;
-	beta = INT_MAX;
-	Selector sele(this, turn, 'a', MAX_DEPTH);
-	sele.minimax(0, false);
-	Game *ret = move(sele.out);
-	cout << YELLO << "Depth searched : " << MAX_DEPTH << endl;
+
+	cout << RED << "Danger zone!!\n";
+
+	pos best;
+	int i = 2;
+	while (i < 20)
+	{
+		alpha = INT_MIN;
+		beta = INT_MAX;
+		Selector sele(this, turn, 'a', i);
+		if (sele.minimax(0, false) != -1)
+			best = sele.out;
+		else
+			break ;
+		i += 2;
+	}
+	Game *ret = move(best);
+	cout << YELLO << "Depth searched : " << i << endl;
 	return ret;
 }
 

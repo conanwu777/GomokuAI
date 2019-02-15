@@ -1,6 +1,9 @@
 #include "Display.hpp"
 #include "Selector.hpp"
 
+timeFrame Display::whiteTime;
+timeFrame Display::blackTime;
+
 pos threadWorking;
 mutex mtx;
 bool mutexRequested;

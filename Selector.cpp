@@ -42,31 +42,15 @@ Selector::Selector(Game *game, char c, char th, int md)
 
 Selector::~Selector() {}
 
-
-// int Selector::minimax()
-// {
-// 	if (th == 'p' && mutexRequested)
-// 		return -1;
-// 	if (game->trueWon)
-// 		return (c == 'b' ? game->score_b : game->score_w);
-// 	if (game->moves.size() == 0)
-// 		game->rankMoves(c);
-// 	depth = 0;
-// 	while (depth <= maxDepth)
-// 	{
-
-// 		depth++;
-// 	}
-
-
-// }
-
 bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 {	
 	if (th == 'p' && mutexRequested)
 		return 0;
+	if (th == 'a' && (c == 'b' ? Display::blackTime.milli
+		: Display::whiteTime.milli) >=  50)
+		return 0;
 	if (!game->move(test))
-		return false;
+		return 0;
 	Game *save = game;
 	game = game->nxs[test];
 	int tmp = minimax(depth + 1, last);
@@ -81,23 +65,26 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 			game->alpha = max(game->alpha, *ret);
 			killerAlpha[depth] = test;
 			if (game->alpha >= game->beta)
-				return true;
+				return 1;
 		}
 		else
 		{
 			game->beta = min(game->beta, *ret);
 			killerBeta[depth] = test;
 			if (game->alpha >= game->beta)
-				return true;
+				return 1;
 		}
 	}
-	return false;
+	return 0;
 }
 
 int Selector::minimax(int depth, bool last)
 {
 	if (th == 'p' && mutexRequested)
-		return 0;
+		return -1;
+	if (th == 'a' && (c == 'b' ? Display::blackTime.milli
+		: Display::whiteTime.milli) >=  50)
+		return -1;
 	int score = (c == 'b' ? game->score_b : game->score_w);
 	if (depth >= maxDepth || game->trueWon || last)
 		return score;
