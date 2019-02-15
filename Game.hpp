@@ -7,7 +7,7 @@ class Selector;
 
 class Game {
 public:
-	int			comp[8];
+	int			comp[10];
 	int			alpha;
 	int			beta;
 	char		turn;

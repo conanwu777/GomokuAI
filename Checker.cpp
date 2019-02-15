@@ -50,6 +50,9 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			else if ((open && curBlock == 3) || (prevBlock && curBlock &&
 				curBlock + prevBlock == 3 && curPlayer == prevPlayer))
 				comp[(curPlayer == 'b' ? 6 : 7)]++;
+			else if (curBlock == 2 && open){
+				comp[(curPlayer == 'b' ? 8 : 9)]++;
+			}
 			open = true;
 			if (first || board[sty - incy][stx - incx])
 				open = false;
@@ -68,9 +71,9 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			else if (open && (curBlock == 3 || (prevOpen && prevBlock && curBlock
 				&& curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
-			// else if (open && (curBlock == 2 || (prevBlock && curBlock &&
-			// 	curBlock + prevBlock == 2  && curPlayer == prevPlayer)))
-			// 	comp[(curPlayer == 'b' ? 6 : 7)]++;
+			else if (curBlock == 2 && !open){
+				comp[(curPlayer == 'b' ? 8 : 9)]++;
+			}
 			prevBlock = curBlock;
 			prevPlayer = curPlayer;
 			prevOpen = open;
@@ -95,7 +98,7 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 char Game::checkWin()
 {
 	char ret = 0;
-	bzero(&comp[0], sizeof(int) * 8);
+	bzero(&comp[0], sizeof(int) * 10);
 	for (int i = 0; i < 19; i++)
 	{
 		if ((ret = checkLine(0, i, 1, 0)))

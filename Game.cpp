@@ -25,7 +25,7 @@ Game& Game::operator=(const Game &g)
 	for (int x = 0; x < 19; x++)
 		for (int y = 0; y < 19; y++)
 			board[y][x] = g.board[y][x];
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 10; i++)
 		comp[i] = g.comp[i];
 	return *this;
 }
@@ -61,11 +61,11 @@ void Game::getScore()
 				base_w += 8 * (abs(i - 9) + abs(j - 9));
 
 	base_b += 1000000 * comp[0] + 200000 * comp[2]
-		+ 10000 * comp[4] + 100 * comp[6];
+		+ 10000 * comp[4] + 100 * comp[6] - 1000 * comp[8];
 	base_b += 10000 * cap_b + 4000 * cap_b * cap_b * mult_b;
 
 	base_w += 1000000 * comp[1] + 200000 * comp[3]
-		+ 10000 * comp[5] + 100 * comp[7];
+		+ 10000 * comp[5] + 100 * comp[7] - 1000 * comp[9];
 	base_w += 10000 * cap_w + 4000 * cap_w * cap_w * mult_w;
 
 	score_b = base_b - 10 * base_w;

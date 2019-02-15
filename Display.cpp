@@ -369,6 +369,9 @@ void Display::printOut()
 		<< WHITE << game->comp[7] << endl;
 	cout << YELLO << "Captures : " << GREY << game->cap_b << YELLO << " | "
 		<< WHITE << game->cap_w << endl;
+	cout << YELLO << "Potential Captures : " << GREY << game->comp[8] << YELLO << " | "
+		<< WHITE << game->comp[9] << endl;
+
 	cout << YELLO << "Current score: "
 		<< GREY << game->score_b << YELLO << " | "
 		<< WHITE << game->score_w << endl << endl;
