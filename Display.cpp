@@ -397,8 +397,8 @@ void	Display::run()
  	SDL_DetachThread(thread);
  	if (!b || !w)
  	{
- 		// thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
- 		// SDL_DetachThread(thread);
+ 		thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
+ 		SDL_DetachThread(thread);
  	}
 	while (1)
 	{

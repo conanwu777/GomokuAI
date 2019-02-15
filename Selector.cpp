@@ -99,7 +99,6 @@ int Selector::minimax(int depth, bool last)
 	if (th == 'p' && mutexRequested)
 		return 0;
 	int score = (c == 'b' ? game->score_b : game->score_w);
-	cout << game->score_w << " , " << game->score_b << endl;
 	if (depth >= maxDepth || game->trueWon || last)
 		return score;
 	for (int k = 0; k < 6; k++)
@@ -111,13 +110,13 @@ int Selector::minimax(int depth, bool last)
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))
 		if (tryMove(&ret, depth, killerAlpha[depth], last))
-			return (ret << 1) + score;
+			return ret;
 	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
 		&& game->adjacent(killerBeta[depth]))
 		if (tryMove(&ret, depth, killerBeta[depth], last))
-			return (ret << 1) + score;
+			return ret;
 	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
 		if (tryMove(&ret, depth, game->moves[i], last))
-			return (ret << 1) + score;
-	return (ret << 1) + score;
+			return ret;
+	return ret;
 }

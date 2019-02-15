@@ -83,6 +83,12 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 		sty += incy;
 		first = false;
 	}
+	if ((open && curBlock == 4) || (prevBlock && curBlock && curBlock + prevBlock == 4 && curPlayer == prevPlayer)){
+		comp[(curPlayer == 'b' ? 2 : 3)]++;
+	}
+	if (open && curBlock == 3){
+		comp[(curPlayer == 'b' ? 6 : 7)]++;
+	}
 	return 0;
 }
 
