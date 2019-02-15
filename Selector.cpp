@@ -31,10 +31,10 @@ void Game::rankMoves()
 					moves[j] = t;
 				}
 
-	cout << "printing board " << lastMv << endl;
-	for (int i = 0; i < 5 && i < moves.size() ; i++){
-		cout << "    " << moves[i] << " score : " << nxs[moves[i]]->score_w << endl;
-	}
+	// cout << "printing board " << lastMv << endl;
+	// for (int i = 0; i < 3 && i < moves.size() ; i++){
+	// 	cout << "    " << moves[i] << " score : " << nxs[moves[i]]->score_w << endl;
+	// }
 }
 
 Selector::Selector() {}

@@ -399,11 +399,11 @@ void	Display::run()
 	SDL_Thread *thread;
  	thread = SDL_CreateThread(Display::TimerThread, "time", (void*)this);
  	SDL_DetachThread(thread);
- 	// if (!b || !w)
- 	// {
- 	// 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
- 	// 	SDL_DetachThread(thread);
- 	// }
+ 	if (!b || !w)
+ 	{
+ 		thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
+ 		SDL_DetachThread(thread);
+ 	}
 	while (1)
 	{
 		if (SDL_PollEvent(&event))

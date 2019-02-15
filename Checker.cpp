@@ -68,9 +68,9 @@ char Game::checkLine(int stx, int sty, int incx, int incy)
 			else if (open && (curBlock == 3 || (prevOpen && prevBlock && curBlock
 				&& curBlock + prevBlock == 3 && curPlayer == prevPlayer)))
 				comp[(curPlayer == 'b' ? 4 : 5)]++;
-			else if (open && (curBlock == 2 || (prevBlock && curBlock &&
-				curBlock + prevBlock == 2  && curPlayer == prevPlayer)))
-				comp[(curPlayer == 'b' ? 6 : 7)]++;
+			// else if (open && (curBlock == 2 || (prevBlock && curBlock &&
+			// 	curBlock + prevBlock == 2  && curPlayer == prevPlayer)))
+			// 	comp[(curPlayer == 'b' ? 6 : 7)]++;
 			prevBlock = curBlock;
 			prevPlayer = curPlayer;
 			prevOpen = open;

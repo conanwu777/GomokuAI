@@ -41,7 +41,7 @@ void Game::getScore()
 {
 	if (trueWon)
 	{
-		score_b = (won == 'b' ? 30000000 : -30000000);
+		score_b = (trueWon == 'b' ? 30000000 : -30000000);
 		score_w = -score_b;
 		return ;
 	}
@@ -62,13 +62,11 @@ void Game::getScore()
 
 	base_b += 1000000 * comp[0] + 200000 * comp[2]
 		+ 10000 * comp[4] + 100 * comp[6];
-	if (cap_b)
-		base_b += 30000 + 9000 * (cap_b * cap_b) * mult_b;
+	base_b += 10000 * cap_b + 4000 * cap_b * cap_b * mult_b;
 
 	base_w += 1000000 * comp[1] + 200000 * comp[3]
 		+ 10000 * comp[5] + 100 * comp[7];
-	if (cap_w)
-		base_w += 30000 + 9000 * (cap_w * cap_w) * mult_w;
+	base_w += 10000 * cap_w + 4000 * cap_w * cap_w * mult_w;
 
 	score_b = base_b - 10 * base_w;
 	score_w = base_w - 10 * base_b;
@@ -122,8 +120,8 @@ Game *Game::aiMove()
 	cout << RED << "Danger zone!!\n";
 
 	pos best;
-	int i = 3;
-	while (i < 4)
+	int i = 2;
+	while (i < 20)
 	{
 		alpha = INT_MIN;
 		beta = INT_MAX;
