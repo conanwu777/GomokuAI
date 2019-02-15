@@ -220,7 +220,7 @@ int		Display::preComp(void* param)
 		disp->game->rankMoves();
 		guessMv.clear();
 		searched = 4;
-		while (searched < 20)
+		while (searched < 5)
 		{
 			for (int i = 0; i < disp->game->moves.size() && i < GUESSNUM; i++)
 			{
@@ -369,8 +369,9 @@ void Display::printOut()
 		<< WHITE << game->comp[7] << endl;
 	cout << YELLO << "Captures : " << GREY << game->cap_b << YELLO << " | "
 		<< WHITE << game->cap_w << endl;
-	cout << YELLO << "Current score (in black's favor): "
-		<< GREY << game->score_b << endl << endl;
+	cout << YELLO << "Current score: "
+		<< GREY << game->score_b << YELLO << " | "
+		<< WHITE << game->score_w << endl << endl;
 }
 
 void	Display::processInputs()
@@ -398,11 +399,11 @@ void	Display::run()
 	SDL_Thread *thread;
  	thread = SDL_CreateThread(Display::TimerThread, "time", (void*)this);
  	SDL_DetachThread(thread);
- 	if (!b || !w)
- 	{
- 		thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
- 		SDL_DetachThread(thread);
- 	}
+ 	// if (!b || !w)
+ 	// {
+ 	// 	thread = SDL_CreateThread(Display::preComp, "pre-compute", (void*)this);
+ 	// 	SDL_DetachThread(thread);
+ 	// }
 	while (1)
 	{
 		if (SDL_PollEvent(&event))
@@ -430,8 +431,6 @@ void	Display::run()
 			else
 				bzero(&blackTime, sizeof(blackTime));
 			game->pv->freeGames(game->lastMv, true);
-			if (b & w)
-				usleep(500000);
 		}
 	}
 }

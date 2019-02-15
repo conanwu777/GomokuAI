@@ -21,6 +21,12 @@ pos operator+(const pos& p, const pos& other)
 	return nPos;
 }
 
+ostream &operator<<(ostream &os, const pos& p)
+{
+	os << "(" << p.x << ", " << p.y << ")";
+	return os;
+}
+
 pos pos::operator=(const pos& p)
 {
 	x = p.x;

@@ -13,8 +13,7 @@
 # define ORANGE "\e[1;38;2;255;120;10m"
 # define GREY "\e[1;38;2;120;100;100m"
 
-# define MAX_DEPTH 4
-# define CUTOFF 20
+# define CUTOFF 5 // SET TO 20 (try 15 too) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # define GUESSNUM 10
 
 using namespace std;

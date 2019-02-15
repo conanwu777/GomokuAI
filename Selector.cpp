@@ -30,6 +30,11 @@ void Game::rankMoves()
 					moves[i] = moves[j];
 					moves[j] = t;
 				}
+
+	cout << "printing board " << lastMv << endl;
+	for (int i = 0; i < 5 && i < moves.size() ; i++){
+		cout << "    " << moves[i] << " score : " << nxs[moves[i]]->score_w << endl;
+	}
 }
 
 Selector::Selector() {}
@@ -92,7 +97,7 @@ int Selector::minimax(int depth, bool last)
 		if (game->comp[k])
 			last = true;
 	if (game->moves.size() == 0)
-		game->rankMoves();
+		game->rankMoves(); 
 	int ret = (game->turn != c ? INT_MAX : INT_MIN);
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))

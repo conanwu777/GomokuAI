@@ -21,6 +21,8 @@ struct pos
 	}
 };
 
+ostream &operator<<(ostream &os, const pos& p);
+
 struct Hash
 {
     size_t operator()(pos const& p) const noexcept
