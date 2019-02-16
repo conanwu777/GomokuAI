@@ -219,13 +219,15 @@ int		Display::preComp(void* param)
 		}
 		disp->game->rankMoves();
 		guessMv.clear();
-		searched = 4;
-		while (searched < 5)
+		searched = 2;
+		while (searched < 20)
 		{
 			for (int i = 0; i < disp->game->moves.size() && i < GUESSNUM; i++)
 			{
 				Game *ptm = disp->game->move(disp->game->moves[i]);
 				Selector sele(ptm, ptm->turn, 'p', searched);
+				ptm->alpha = INT_MIN;
+				ptm->beta = INT_MAX;
 				sele.minimax(0, false);
 				if (disp->game->trueWon || mutexRequested)
 					break;
