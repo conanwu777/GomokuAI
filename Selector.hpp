@@ -6,11 +6,11 @@ class Selector {
 	int maxDepth;
 	char c;
 	char th;
-	timeFrame *cur;
+	int st;
 public:
 	pos out;
 	Selector();
-	Selector(Game *game, char c, char th, int maxDepth);
+	Selector(Game *game, char c, char th, int maxDepth, int st);
 	~Selector();
 	bool	tryMove(int *ret, int depth, pos test, bool last);
 	int		minimax(int depth, bool last);

@@ -3,6 +3,7 @@
 
 timeFrame Display::whiteTime;
 timeFrame Display::blackTime;
+int Display::centisec;
 
 pos threadWorking;
 mutex mtx;
@@ -91,6 +92,7 @@ void Display::updateTime(char color, float time)
 		&blackTotalTime : &whiteTotalTime);
 	addTime(frame, time);
 	addTime(totalFrame, time);
+	centisec += time * 100;
 }
 
 void Display::printNumber(int num, int x, int y, bool b, float scale)
@@ -219,13 +221,14 @@ int		Display::preComp(void* param)
 		}
 		disp->game->rankMoves();
 		guessMv.clear();
+		int st = centisec;
 		searched = 2;
 		while (searched < 20)
 		{
 			for (int i = 0; i < disp->game->moves.size() && i < GUESSNUM; i++)
 			{
 				Game *ptm = disp->game->move(disp->game->moves[i]);
-				Selector sele(ptm, ptm->turn, 'p', searched);
+				Selector sele(ptm, ptm->turn, 'p', searched, st);
 				ptm->alpha = INT_MIN;
 				ptm->beta = INT_MAX;
 				sele.minimax(0, false);
@@ -399,6 +402,7 @@ void	Display::run()
 		game->board[9][9] = 'b';
 		game->turn = 'w';
 	}
+	centisec = 0;
 	refresh();
 	game->rankMoves();
 	SDL_Thread *thread;

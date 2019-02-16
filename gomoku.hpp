@@ -13,8 +13,9 @@
 # define ORANGE "\e[1;38;2;255;120;10m"
 # define GREY "\e[1;38;2;120;100;100m"
 
-# define CUTOFF 20
+# define CUTOFF 15
 # define GUESSNUM 10
+# define T_DELTA 50
 
 using namespace std;
 

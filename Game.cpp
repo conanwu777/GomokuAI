@@ -117,15 +117,14 @@ Game *Game::aiMove()
 		return move(guessMv[lastMv]);
 	}
 
-	cout << RED << "Danger zone!!\n";
-
 	pos best;
 	int i = 2;
+	int st = Display::centisec;
 	while (i < 20)
 	{
 		alpha = INT_MIN;
 		beta = INT_MAX;
-		Selector sele(this, turn, 'a', i);
+		Selector sele(this, turn, 'a', i, st);
 		if (sele.minimax(0, false) != -1)
 			best = sele.out;
 		else

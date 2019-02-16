@@ -34,10 +34,9 @@ void Game::rankMoves()
 
 Selector::Selector() {}
 
-Selector::Selector(Game *game, char c, char th, int md)
-: game(game), c(c), th(th), out({-1, -1}), maxDepth(md)
+Selector::Selector(Game *game, char c, char th, int md, int st)
+: game(game), c(c), th(th), out({-1, -1}), maxDepth(md), st(st)
 {
-	cur = (c == 'b' ? &Display::blackTime : &Display::whiteTime);
 	// cout << RED << "Selector to maxmize " << (c == 'b' ? "Black" : "White") << endl;
 }
 
@@ -47,7 +46,7 @@ bool	Selector::tryMove(int* ret, int depth, pos test, bool last)
 {	
 	if (th == 'p' && mutexRequested)
 		return 0;
-	if (th == 'a' && cur->milli >=  50)
+	if (th == 'a' && Display::centisec - st >= T_DELTA)
 		return 0;
 	if (!game->move(test))
 		return 0;
@@ -82,7 +81,7 @@ int Selector::minimax(int depth, bool last)
 {
 	if (th == 'p' && mutexRequested)
 		return -1;
-	if (th == 'a' && cur->milli >=  50)
+	if (th == 'a' && Display::centisec - st >= T_DELTA)
 		return -1;
 	int score = (c == 'b' ? game->score_b : game->score_w);
 	if (depth >= maxDepth || game->trueWon || last)
@@ -96,13 +95,13 @@ int Selector::minimax(int depth, bool last)
 	if (!game->board[killerAlpha[depth].y][killerAlpha[depth].x]
 		&& game->adjacent(killerAlpha[depth]))
 		if (tryMove(&ret, depth, killerAlpha[depth], last))
-			return (th == 'a' && cur->milli >=  50 ? -1 : ret);
+			return (th == 'a' && Display::centisec - st >= T_DELTA ? -1 : ret);
 	if (!game->board[killerBeta[depth].y][killerBeta[depth].x]
 		&& game->adjacent(killerBeta[depth]))
 		if (tryMove(&ret, depth, killerBeta[depth], last))
-			return (th == 'a' && cur->milli >=  50 ? -1 : ret);
+			return (th == 'a' && Display::centisec - st >= T_DELTA ? -1 : ret);
 	for (int i = 0; i < CUTOFF && i < game->moves.size(); i++)
 		if (tryMove(&ret, depth, game->moves[i], last))
-			return (th == 'a' && cur->milli >=  50 ? -1 : ret);
-	return (th == 'a' && cur->milli >=  50 ? -1 : ret);
+			return (th == 'a' && Display::centisec - st >= T_DELTA ? -1 : ret);
+	return (th == 'a' && Display::centisec - st >= T_DELTA ? -1 : ret);
 }
