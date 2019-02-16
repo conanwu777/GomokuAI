@@ -6,7 +6,7 @@ class Selector {
 	int maxDepth;
 	char c;
 	char th;
-
+	timeFrame *cur;
 public:
 	pos out;
 	Selector();
