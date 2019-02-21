@@ -19,11 +19,13 @@ In this project we build an AI capable of playing the classical board game Gomok
 
 - when a player place a piece which sanwitches exactly two of opponent's pieces, the pieces are then taken off the board and 'captured'
 
-![alt_text](images/Capure.jpg)
+![alt_text](images/Capture.jpg)
 
 - player wins after capturing 10 of opponent's pieces
 
-![alt_text](images/CapureWin.png)
+![alt_text](images/WhiteCapAlmostWin.png)
+
+![alt_text](images/WhiteCapWin.png)
 
 - a win by capture overtakes win by connecting 5, i.e. once a player has connecte 5 pieces, opponent will still have 1 term to play, in case that is a capture and results to a winning by capture, then the opponent wins
 
@@ -35,4 +37,9 @@ In this project we build an AI capable of playing the classical board game Gomok
 
 - a free-three is when there are three pieces of the same color (possibly with one space separating them) aligns on a line with both ends un-occupied:
 
+![alt_text](images/FreeThree.jpg)
+
 - player is not allowed to place a piece which directly results in two free-threes both using the placed piece:
+
+![alt_text](images/DoubleThree.jpg)
+
