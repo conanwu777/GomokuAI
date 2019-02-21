@@ -1,6 +1,8 @@
 # GomokuAI
 In this project we build an AI capable of playing the classical board game Gomoku along with an implementation of the game mechanisms and UI
 
+![alt_text](images/cover.png)
+
 ## Highlights
 
 - Minimax algorithm with Alpha-Beta pruning enhanced by killer heuristics
@@ -16,6 +18,8 @@ In this project we build an AI capable of playing the classical board game Gomok
 ### Captures
 
 - when a player place a piece which sanwitches exactly two of opponent's pieces, the pieces are then taken off the board and 'captured'
+
+![alt_text](images/CapSetup.png)
 
 - player wins after capturing 10 of opponent's pieces
 
